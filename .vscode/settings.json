@@ -4,10 +4,11 @@
         "BMP.C": "cpp",
         "drawtool.C": "cpp",
         "hanzi.h": "c",
-        "HZ.C": "cpp"
+        "HZ.C": "cpp",
+        "mouse.h": "c"
     },
     "git.ignoreLimitWarning": true,
     "C_Cpp.default.includePath": [
-        "./include"
+        "C:\\Users\\26806\\Desktop\\BC31\\DISK_C\\try\\include"
     ],
 }

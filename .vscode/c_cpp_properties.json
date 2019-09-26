@@ -10,7 +10,9 @@
             "cStandard": "c11",
             "cppStandard": "c++17",
             "intelliSenseMode": "clang-x64",
-            "includePath": ["./include"]
+            "includePath": [
+                "C:\\Users\\26806\\Desktop\\BC31\\DISK_C\\try\\include"
+            ]
         }
     ],
     "version": 4

@@ -91,6 +91,7 @@ struct CarStruct
     int count;     //在转弯时计算记步
     int flag;      //用于标志车子是否驶出桌面
     double angle;  //车子当前的角度，正北为零度，逆时针
+    struct CarStruct *next;
 };
 typedef struct CarStruct CAR;
 
