@@ -5,9 +5,11 @@
 *********************************************/
 
 #include <stdio.h>
+#include <graphics.h>
 #include "mouse.h"
 #include "draw.h"
 #include "hanzi.h"
+#include "all.h"
 #include <time.h>
 #include <stdlib.h>
 #include <dos.h>
@@ -30,8 +32,9 @@ void CreatCar(CAR **head)
 
 void CarDispatch(CAR *car)
 {
-    static int origin = clock(), dt, v;
+    static int dt, v, origin;
     CAR *current, *pre, *temp;
+    origin = clock();
     dt = clock() - origin;
     DrawRoad();
     for (pre = car, current = pre->next; current != NULL; current = current->next)
@@ -54,7 +57,7 @@ void CarDispatch(CAR *car)
                 current->x += dt * v;
                 break;
             default:
-                put_asc(current->x, current->y, "bad car", RED, 2, 2);
+                PutAsc(current->x, current->y, "bad car", RED, 2, 2);
                 break;
             }
             DrawCar(current);

@@ -5,7 +5,8 @@
         "drawtool.C": "cpp",
         "hanzi.h": "c",
         "HZ.C": "cpp",
-        "mouse.h": "c"
+        "mouse.h": "c",
+        "svgasub.h": "c"
     },
     "git.ignoreLimitWarning": true,
     "C_Cpp.default.includePath": [
