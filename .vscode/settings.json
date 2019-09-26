@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "mouse.C": "cpp",
+        "BMP.C": "cpp",
+        "drawtool.C": "cpp",
+        "hanzi.h": "c",
+        "HZ.C": "cpp"
+    },
+    "git.ignoreLimitWarning": true
+}
