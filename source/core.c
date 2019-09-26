@@ -30,5 +30,3 @@ int main()
         ButtonRefresh();
     }
 }
-
-

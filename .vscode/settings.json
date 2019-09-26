@@ -6,5 +6,8 @@
         "hanzi.h": "c",
         "HZ.C": "cpp"
     },
-    "git.ignoreLimitWarning": true
+    "git.ignoreLimitWarning": true,
+    "C_Cpp.default.includePath": [
+        "./include"
+    ],
 }
