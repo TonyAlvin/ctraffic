@@ -23,9 +23,12 @@ int main()
     PutHZ24(500, 700, "³ÂÕ×ÀÊ111¹þ¹þ¹þ", WHITE, 1, 2, 0, 0);
     PutHZ16(500, 730, "³ÂÕ×ÀÊ111¹þ¹þ¹þ", WHITE, 1, 1, 0, 0);
     PutHZ12(500, 750, "³ÂÕ×ÀÊ111¹þ¹þ¹þ", WHITE, 1, 1, 0, 0);
+    DrawTrafficLight(100,200,2,RED);
     while (1)
     {
         MouseRead();
         ButtonRefresh();
     }
 }
+
+
