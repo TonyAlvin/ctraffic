@@ -3,58 +3,77 @@
  * ***作者：董国庆
  * ***功能：创建车链表，车位置计算，红绿灯管理
 *********************************************/
-
 #include <stdio.h>
 #include <graphics.h>
-#include "mouse.h"
-#include "draw.h"
-#include "hanzi.h"
-#include "all.h"
 #include <time.h>
 #include <stdlib.h>
 #include <dos.h>
+#include "mouse.h"
+#include "draw.h"
+#include "hanzi.h"
+#include <string.h>
+#include "all.h"
+#include "dispatch.h"
 
-void CreatCarList(CAR **head)
+int RandInt(void)
 {
-    CAR **current = head;
-    *current = (CAR *)malloc(sizeof(CAR));
-}
-
-void CreatCar(CAR **head)
-{
-    int j, temp = (unsigned)time(NULL);
+    int temp = (unsigned)time(NULL);
     srand(temp * 6482);
     temp = rand();
-    j = temp % 2;
-    j <<= 2;
-    j = temp % 16;
+    return temp;
+}
+
+void InitCar(CAR *newcar)
+{
+    char s[10];
+    int j, temp;
+    temp = RandInt();
+}
+
+void CreatCarList(CAR **head, int n)
+{
+    int i;
+    CAR **current = head;
+    *current = (CAR *)malloc(sizeof(CAR));
+    for (i = 0; i < n; i++)
+    {
+        current = &((*current)->next);
+        *current = (CAR *)malloc(sizeof(CAR));
+        InitCar(*current);
+    }
+    (*current)->next = NULL;
 }
 
 void CarDispatch(CAR *car)
 {
-    static int dt, v, origin;
+    // char s[10];
+    static int dt, origin = 0;
+    int v;
     CAR *current, *pre, *temp;
-    origin = clock();
+    if (origin == 0)
+        origin = clock();
     dt = clock() - origin;
     DrawRoad();
     for (pre = car, current = pre->next; current != NULL; current = current->next)
     {
+        // itoa(current->speed >> 4, s, 10);
+        // PutAsc(20, 220, s, RED, 2, 2);
         if (current->x > 1024 || current->x < 0 || current->y < 0 || current->y > 768)
         {
-            
             pre->next = current->next;
             free(current);
         }
         else
         {
-            v = current->speed << 4 >> 4;  //读取速度大小，存贮在speed的后四位，故先<<4将前四位去掉
-            switch ((current->speed) >> 4) //根据车的方向判断是上下还是左右方向行驶
+            switch ((int)current->angle / 90) //根据车的方向判断是上下还是左右方向行驶
             {
             case 0:
-                current->y += dt * v;
+            case 2:
+                current->y += v / 150;
                 break;
             case 1:
-                current->x += dt * v;
+            case 3:
+                current->x += v / 150;
                 break;
             default:
                 PutAsc(current->x, current->y, "bad car", RED, 2, 2);
@@ -65,6 +84,6 @@ void CarDispatch(CAR *car)
     }
 }
 
-void LightDispatch()
+void GetTime(void)
 {
 }

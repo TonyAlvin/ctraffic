@@ -6,7 +6,11 @@
         "hanzi.h": "c",
         "HZ.C": "cpp",
         "mouse.h": "c",
-        "svgasub.h": "c"
+        "svgasub.h": "c",
+        "draw.h": "c",
+        "stdio.h": "c",
+        "fz_s.C": "cpp",
+        "CAR_S.C": "cpp"
     },
     "git.ignoreLimitWarning": true,
     "C_Cpp.default.includePath": [

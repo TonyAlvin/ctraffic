@@ -119,7 +119,7 @@ void DrawCar(CAR *car)
      int i;
      int x = car->x, y = car->y;
      int color = car->color;
-     double a = car->angle;
+     double a = (car->angle) * P / 180;
      int tou[16], wei[16], ch[8], ding[8], d1[6], d2[6], d3[6], d4[6];
      //³µÍ·
      tou[0] = x + A * 8.6 * cos(54.5 * P / 180 + a);

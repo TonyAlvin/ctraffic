@@ -50,6 +50,24 @@
 #define DIS 37      //短警戒距离(*考虑到转角及车身长，这是最长的*)
 #define DIL 74      //长警戒距离
 
+/****************车道的宏定义****************/
+#define UU1 133 //U代表上D下L左R右
+#define UU2 153 //UU1即为上边横路的上侧第一车道
+#define UD1 183 //LL2即为左边纵路左侧第二车道
+#define UD2 208
+#define DU1 533
+#define DU2 553
+#define DD1 582
+#define DD2 608
+#define LL1 213
+#define LL2 233
+#define LR1 267
+#define LR2 287
+#define RL1 713
+#define RL2 733
+#define RR1 763
+#define RR2 787
+
 /**********按钮结构***********/
 struct BUTTON
 {
@@ -77,20 +95,21 @@ typedef struct INPUT_BOX BOX;
 /***************车的结构****************/
 struct CarStruct
 {
-    int x;         //车子中心当前x坐标
-    int y;         //车子中心当前y坐标
-    int color;     //车子颜色
-    int cnum;      //车牌号
-    int alarm;     //警戒距离警报
-    int dirt1;     //车子所在的初始路向
-    int dirt2;     //车子转向的路向
-    int speed;     //车子当前速度
-    int std_speed; //车子本来的速度
-    int spflag;    //超速标志位
-    int justment;  //首位为所在路，次位为所在道
-    int count;     //在转弯时计算记步
-    int flag;      //用于标志车子是否驶出桌面
-    double angle;  //车子当前的角度，正北为零度，逆时针
+    int x;     //车子中心当前x坐标
+    int y;     //车子中心当前y坐标
+    int color; //车子颜色
+    int cnum;  //车牌号
+    int alarm; //警戒距离警报
+    int dirt1;
+    int dirt2;
+    int dirt3;
+    unsigned int speed; //车子当前速度
+    int std_speed;      //车子本来的速度
+    int spflag;         //超速标志位
+    int justment;       //首位为所在路，次位为所在道
+    int count;          //在转弯时计算记步
+    int flag;           //用于标志车子是否驶出桌面
+    double angle;       //车子当前的角度，正北为零度，逆时针
     struct CarStruct *next;
 };
 typedef struct CarStruct CAR;

@@ -15,11 +15,16 @@ void BtAbout(void)
     static about = 0;
     void *AboutBuf;
     AboutBuf = malloc(imagesize(100, 20, 300, 320));
+    MouseHide();
+    getimage(100, 20, 300, 320, AboutBuf);
+
     setfillstyle(1, DARKGRAY);
     bar(100, 20, 300, 320);
-    PutHZ16(110, 30, "³ÂÕ×ÀÉ ¶­¹úÇì", WHITE, 1, 2, 2, 20);
+    InitMouse();
+    MouseShow();
+    PutHZ24(110, 30, bt_about.btmsg, WHITE, 1, 1, 1, 0);
     about = 1;
-    while (!MouseOnBT(&bt_about))
+    while (MouseRead(), !MouseOnBT(&bt_about))
         ;
     putimage(100, 20, AboutBuf, 1);
     free(AboutBuf);
