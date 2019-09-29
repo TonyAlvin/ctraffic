@@ -37,7 +37,7 @@ int main()
     int i = 0;
     CAR *a;
     SVGA_Init();
-    CreatCarList(&a, 1);
+    CreatCarList(&a, 12);
     CountRunTimes();
     //Set_Pal_File(".\\resource\\svga\\win.act");
     setbkcolor(BLACK);

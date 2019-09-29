@@ -7,6 +7,20 @@
 #include "BtFeatures.h"
 #include "all.h"
 
+void RefreshRoad(void)
+{
+     //画路面
+     setfillstyle(0, BLACK);
+     bar(0, 121, 1024, 169);
+     bar(0, 171, 1024, 219);
+     bar(0, 521, 1024, 569);
+     bar(0, 571, 1024, 619);
+     bar(201, 20, 249, 767);
+     bar(251, 20, 299, 767);
+     bar(701, 219, 749, 767);
+     bar(751, 219, 799, 767);
+}
+
 void DrawRoad(void)
 {
      //画路面

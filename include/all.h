@@ -61,7 +61,7 @@
 #define DD2 608
 #define LL1 213
 #define LL2 233
-#define LR1 267
+#define LR1 264
 #define LR2 287
 #define RL1 713
 #define RL2 733

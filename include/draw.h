@@ -2,6 +2,7 @@
 #define __draw_h_
 
 #include "all.h"
+void RefreshRoad(void);                                                          //刷新路面
 void DrawRoad(void);                                                             //画路
 void DrawCar(CAR *car);                                                          //画车
 void DrawTrafficLight(int x, int y, unsigned int direction, unsigned int color); //画交通灯
