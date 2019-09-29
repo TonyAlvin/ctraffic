@@ -26,7 +26,7 @@ int RandInt(void)
     temp = rand();
     return temp;
 }
-
+111
 void InitCar(CAR *newcar)
 {
     // char s[10];
