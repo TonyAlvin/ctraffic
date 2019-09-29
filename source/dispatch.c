@@ -26,11 +26,7 @@ int RandInt(void)
     temp = rand();
     return temp;
 }
-<<<<<<< HEAD
-111
-=======
-222
->>>>>>> alvin
+
 void InitCar(CAR *newcar)
 {
     // char s[10];
