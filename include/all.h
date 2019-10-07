@@ -67,6 +67,11 @@
 #define RL2 733
 #define RR1 763
 #define RR2 787
+/***路口位置定义***/
+#define UP_Y 170
+#define LEFT_X 250
+#define DOWN_Y 570
+#define RIGHT_X 750
 
 /**********按钮结构***********/
 struct BUTTON
@@ -107,7 +112,7 @@ struct CarStruct
     int std_speed;      //车子本来的速度
     int spflag;         //超速标志位
     int justment;       //首位为所在路，次位为所在道
-    int count;          //在转弯时计算记步
+    // int count;          //在转弯时计算记步
     int flag;           //用于标志车子是否驶出桌面
     double angle;       //车子当前的角度，正北为零度，逆时针
     struct CarStruct *next;

@@ -52,6 +52,7 @@ int main()
     DrawTrafficLight(100, 200, 2, RED);
     while (1)
     {
+        delay(8);
         MouseRead();
         ButtonRefresh();
         CarDispatch(a);
