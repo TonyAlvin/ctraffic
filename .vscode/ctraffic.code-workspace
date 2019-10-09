@@ -1,11 +1,24 @@
 {
 	"folders": [
 		{
-			"path": "F:\\BC31\\DISK_C\\try"
+			"path": "C:\\Users\\26806\\Desktop\\BC31\\DISK_C\\try"
 		}
 	],
 	"settings": {
 		"files.associations": {
-		}
+			"mouse.C": "cpp",
+			"BMP.C": "cpp",
+			"drawtool.C": "cpp",
+			"hanzi.h": "c",
+			"HZ.C": "cpp",
+			"mouse.h": "c",
+			"svgasub.h": "c",
+			"draw.h": "c",
+			"stdio.h": "c",
+			"fz_s.C": "cpp",
+			"CAR_S.C": "cpp"
+		},
+		"files.encoding": "gb2312",
+		"git.ignoreLimitWarning": true
 	}
 }

@@ -244,6 +244,7 @@ int MouseRead(void) /*鼠标按键情况*/
 		MouseGetXY();
 		if (MS.mx != x || MS.my != y)
 			status = 1;
+		break;
 	}
 
 	if (status) /*移动情况才重新显示鼠标*/

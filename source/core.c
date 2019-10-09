@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "svgasub.h"
 #include <graphics.h>
+#include "light.h"
 #include "mouse.h"
 #include "hanzi.h"
 #include "draw.h"
@@ -34,27 +35,20 @@ void CountRunTimes(void)
 
 int main()
 {
-    int i = 0;
-    CAR *a;
+    CAR *a, *b = NULL;
     SVGA_Init();
-    CreatCarList(&a, 12);
     CountRunTimes();
+    CreatCarList(&a,10);
     //Set_Pal_File(".\\resource\\svga\\win.act");
     setbkcolor(BLACK);
     InitMouse();
-    // DrawTrafficLight(200, 300, 1, RED);
     DrawRoad();
     DrawMenu();
-    // // PutHZ16(110, 30, "¹ØÓÚ±¾ÏµÍ³²Ù", WHITE, 1, 1, 0, 0);
-    // PutHZ24(500, 700, "³ÂÕ×ÀÊ111¹þ¹þ¹þ", WHITE, 1, 2, 0, 0);
-    // PutHZ16(110, 30, "³ÂÕ×ÀÊ111¹þ¹þ¹þ", WHITE, 1, 1, 0, 0);
-    // PutHZ12(500, 750, "³ÂÕ×ÀÊ111¹þ¹þ¹þ", WHITE, 1, 1, 0, 0);
-    DrawTrafficLight(100, 200, 2, RED);
     while (1)
     {
-        delay(8);
+        NormalControl(1);
         MouseRead();
         ButtonRefresh();
-        CarDispatch(a);
+        CarListDispatch(a,b);
     }
 }
