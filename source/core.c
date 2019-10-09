@@ -38,7 +38,7 @@ int main()
     CAR *a, *b = NULL;
     SVGA_Init();
     CountRunTimes();
-    CreatCarList(&a,10);
+    CreatCarList(&a, 1);
     //Set_Pal_File(".\\resource\\svga\\win.act");
     setbkcolor(BLACK);
     InitMouse();
@@ -46,9 +46,9 @@ int main()
     DrawMenu();
     while (1)
     {
-        NormalControl(1);
         MouseRead();
         ButtonRefresh();
-        CarListDispatch(a,b);
+        TurnLeftCar(a->next);
+        DrawCar(a->next);
     }
 }

@@ -105,15 +105,12 @@ struct CarStruct
     double angle;         //车子当前的角度，正北为零度，逆时针
     int justment;         //首位为所在路，次位为所在道
     unsigned short color; //车子颜色
-    int alarm; //警戒距离警报
-    unsigned short turn1;
-    unsigned short turn2;
-    unsigned short turn3;
-    unsigned short turn4;
-    unsigned int speed;  //车子当前速度
-    int std_speed;       //车子本来的速度
+    int alarm;            //警戒距离警报
+    unsigned short turn[4];
+    unsigned int speed; //车子当前速度
+    int std_speed;      //车子本来的速度
     // int spflag;       //超速标志位
-    // int count;        //在转弯时计算记步
+    int count; //在转弯时计算记步
     // int cnum;         //车牌号
     unsigned short flag; //用于标志车子是否驶出桌面
     struct CarStruct *next;
