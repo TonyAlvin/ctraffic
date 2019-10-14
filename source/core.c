@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "svgasub.h"
 #include <graphics.h>
 #include "light.h"
@@ -8,6 +9,7 @@
 #include "draw.h"
 #include "dispatch.h"
 #include "all.h"
+#include <bios.h>
 
 extern int MouseX;
 extern int MouseY;
@@ -35,20 +37,39 @@ void CountRunTimes(void)
 
 int main()
 {
-    CAR *a, *b = NULL;
+    int i;
+    // char s[5];
+    CAR *a, *b;
     SVGA_Init();
     CountRunTimes();
-    CreatCarList(&a, 1);
+    CreatCarList(&a, 2);
+    CreatCarList(&b, 0);
     //Set_Pal_File(".\\resource\\svga\\win.act");
     setbkcolor(BLACK);
     InitMouse();
     DrawRoad();
     DrawMenu();
+    // itoa((int)(a->next->angle), s, 10);
+    // PutAsc(50, 50, s, RED, 2, 2);
     while (1)
     {
         MouseRead();
         ButtonRefresh();
-        TurnLeftCar(a->next);
-        DrawCar(a->next);
+        CarListDispatch(a, b);
+        if (kbhit())
+        {
+            i = bioskey(0);
+            if (i == PAUSE)
+                while (1)
+                {
+                    MouseRead();
+                    if (bioskey(1) == START)
+                        break;
+                }
+            else if (i == ESC)
+                exit(0);
+        }
+        // TurnLeftCar(a->next);
+        // DrawCar(a->next);
     }
 }

@@ -85,6 +85,6 @@ void NormalControl(int n)
     interval = (unsigned int)time(NULL) - origin;
     DrawLightC(LEFT_X, UP_Y, interval / n);
     DrawLightT(RIGHT_X, UP_Y, (interval + 1) / n);
-    DrawLightC(LEFT_X, DOWN_Y, (interval + 2) / n);
+    DrawLightC(LEFT_X, DOWN_Y, (interval + 0) / n);
     DrawLightC(RIGHT_X, DOWN_Y, (interval + 3) / n);
 }
