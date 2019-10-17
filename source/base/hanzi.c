@@ -110,9 +110,9 @@ void PutHZ16(int x, int y, char *s, int color, int dx, int dy, int distance, cha
 		{
 			setcolor(color);
 			word[0] = *s;
-			PutAsc(x, y, word, color, 1, 1);
+			PutAsc(x, y, word, color, dx, dx);
 			s += 1;
-			x += 12;
+			x += 9 * dx;
 		}
 		else
 		{

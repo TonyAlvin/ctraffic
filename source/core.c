@@ -43,7 +43,7 @@ int main()
     CountRunTimes();
     CreatCarList(&a, 2);
     CreatCarList(&b, 0);
-    //Set_Pal_File(".\\resource\\svga\\win.act");
+    // Set_Pal_File(".\\resource\\svga\\win.act");
     setbkcolor(BLACK);
     InitMouse();
     DrawRoad();
@@ -59,6 +59,7 @@ int main()
             if (i == PAUSE)
                 while (1)
                 {
+                    ButtonRefresh();
                     MouseRead();
                     if (bioskey(1) == START)
                         break;

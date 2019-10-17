@@ -58,7 +58,7 @@
 #define DU1 533
 #define DU2 558
 #define DD1 582
-#define DD2 608
+#define DD2 606
 #define LL1 213
 #define LL2 233
 #define LR1 264
