@@ -38,7 +38,6 @@ void CountRunTimes(void)
 int main()
 {
     int i;
-    // char s[5];
     CAR *a, *b;
     SVGA_Init();
     CountRunTimes();
@@ -49,8 +48,6 @@ int main()
     InitMouse();
     DrawRoad();
     DrawMenu();
-    // itoa((int)(a->next->angle), s, 10);
-    // PutAsc(50, 50, s, RED, 2, 2);
     while (1)
     {
         MouseRead();
