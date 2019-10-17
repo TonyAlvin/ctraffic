@@ -229,18 +229,13 @@ int MouseRead(void) /*鼠标按键情况*/
 	while (x == MS.mx && y == MS.my && status == 0 && press == 0)
 	{
 		if (kbhit())
-		{
 			press = bioskey(0);
-		}
-
 		if (LeftPress())
 			press = 1;
-
 		else if (RightPress())
 			press = 2;
 		else if (LeftPress() && RightPress())
 			press = 3;
-
 		MouseGetXY();
 		if (MS.mx != x || MS.my != y)
 			status = 1;

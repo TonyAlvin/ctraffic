@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <mouse.h>
-#include "all.h"
+#include <conio.h>
 #include <graphics.h>
+#include "mouse.h"
+#include "all.h"
 #include "hanzi.h"
 
 void BtExit(void)
@@ -12,22 +13,18 @@ void BtExit(void)
 
 void BtAbout(void)
 {
-    static about = 0;
-    void *AboutBuf;
-    AboutBuf = malloc(imagesize(100, 20, 300, 320));
-    MouseHide();
-    getimage(100, 20, 300, 320, AboutBuf);
-
-    setfillstyle(1, DARKGRAY);
-    bar(100, 20, 300, 320);
-    InitMouse();
-    MouseShow();
-    PutHZ24(110, 30, bt_about.btmsg, WHITE, 1, 1, 1, 0);
-    about = 1;
-    while (MouseRead(), !MouseOnBT(&bt_about))
-        ;
-    putimage(100, 20, AboutBuf, 1);
-    free(AboutBuf);
+    PutHZ16(450, 300, "×÷Õß", WHITE, 2, 2, 2, 0);
+    PutHZ16(360, 350, "¶­¹úÇì U201814993", WHITE, 2, 2, 2, 0);
+    PutHZ16(360, 390, "³ÂÕ×ÀÊ U201812992", WHITE, 2, 2, 2, 0);
+    delay(50);
+    while (1)
+    {
+        MouseRead();
+        if (LeftPress())
+            break;
+    }
+    setfillstyle(0, BLACK);
+    bar(360, 300, 650, 440);
     return;
 }
 

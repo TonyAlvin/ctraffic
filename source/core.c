@@ -38,19 +38,16 @@ void CountRunTimes(void)
 int main()
 {
     int i;
-    // char s[5];
     CAR *a, *b;
     SVGA_Init();
     CountRunTimes();
     CreatCarList(&a, 2);
     CreatCarList(&b, 0);
-    //Set_Pal_File(".\\resource\\svga\\win.act");
+    // Set_Pal_File(".\\resource\\svga\\win.act");
     setbkcolor(BLACK);
     InitMouse();
     DrawRoad();
     DrawMenu();
-    // itoa((int)(a->next->angle), s, 10);
-    // PutAsc(50, 50, s, RED, 2, 2);
     while (1)
     {
         MouseRead();
@@ -62,6 +59,7 @@ int main()
             if (i == PAUSE)
                 while (1)
                 {
+                    ButtonRefresh();
                     MouseRead();
                     if (bioskey(1) == START)
                         break;
