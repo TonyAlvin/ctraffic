@@ -746,3 +746,144 @@ void SolveAlarm(CAR *p)
         break;
     }
 }
+
+void transform_lane(CAR *tar, int flag)
+{
+    if (flag == 1)
+    {
+        switch (tar->justment)
+        {
+        case 111:
+        case 141:
+            if (tar->count >= 0 && tar->count < 5)
+            {
+                tar->count++;
+            }
+            else if (tar->count <= 9)
+            {
+
+                tar->count++;
+            }
+            if (tar->count == 10)
+            {
+                tar->count = 0;
+            }
+
+        case 112:
+        case 142:
+            if (tar->count >= 0 && tar->count < 5)
+            {
+                tar->count++;
+            }
+            else if (tar->count <= 9)
+            {
+
+                tar->count++;
+            }
+            if (tar->count == 10)
+            {
+                tar->count = 0;
+            }
+
+        case 113:
+        case 143:
+            if (tar->count >= 0 && tar->count < 5)
+            {
+                tar->count++;
+            }
+            else if (tar->count <= 9)
+            {
+
+                tar->count++;
+            }
+            if (tar->count == 10)
+            {
+                tar->count = 0;
+            }
+
+        case 114:
+        case 144:
+            if (tar->count >= 0 && tar->count < 5)
+            {
+                tar->count++;
+            }
+            else if (tar->count <= 9)
+            {
+
+                tar->count++;
+            }
+            if (tar->count == 10)
+            {
+                tar->count = 0;
+            }
+
+        case 211:
+        case 231:
+            if (tar->count >= 0 && tar->count < 5)
+            {
+                tar->count++;
+            }
+            else if (tar->count <= 9)
+            {
+
+                tar->count++;
+            }
+            if (tar->count == 10)
+            {
+                tar->count = 0;
+            }
+
+        case 212:
+        case 232:
+            if (tar->count >= 0 && tar->count < 5)
+            {
+                tar->count++;
+            }
+            else if (tar->count <= 9)
+            {
+
+                tar->count++;
+            }
+            if (tar->count == 10)
+            {
+                tar->count = 0;
+            }
+
+        case 213:
+        case 233:
+            if (tar->count >= 0 && tar->count < 5)
+            {
+                tar->count++;
+            }
+            else if (tar->count <= 9)
+            {
+
+                tar->count++;
+            }
+            if (tar->count == 10)
+            {
+                tar->count = 0;
+            }
+
+        case 214:
+        case 234:
+            if (tar->count >= 0 && tar->count < 5)
+            {
+
+                tar->count++;
+            }
+            else if (tar->count <= 9)
+            {
+
+                tar->count++;
+            }
+            if (tar->count == 10)
+            {
+                tar->count = 0;
+            }
+
+        default:
+            break;
+        }
+    }
+}
