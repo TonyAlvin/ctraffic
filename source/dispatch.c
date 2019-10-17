@@ -56,10 +56,10 @@ void InitCar(CAR *newcar)
         RoadU[] = {LL1, LL2},
         RoadD[] = {LR1, LR2, RR1, RR2},
         ang;
-    newcar->turn[0] = RandInt(1,3); //生成转向信息
-    newcar->turn[1] = RandInt(1,3);
-    newcar->turn[2] = RandInt(1,3);
-    newcar->turn[3] = RandInt(1,3);
+    newcar->turn[0] = RandInt(1, 3); //生成转向信息
+    newcar->turn[1] = RandInt(1, 3);
+    newcar->turn[2] = RandInt(1, 3);
+    newcar->turn[3] = RandInt(1, 2);
     ang = 90 * RandInt(0, 3);
     newcar->angle = ang;
     switch (ang / 90)
@@ -167,6 +167,7 @@ void InitCar(CAR *newcar)
     newcar->count = 0;
     // DrawCar(newcar);
 }
+
 //测试时生成链表使用，无实际意义
 void CreatCarList(CAR **head, int n)
 {
@@ -205,6 +206,33 @@ void CarListDispatch(CAR *car, CAR *turn)
     {
         TurnCar(car, current, precurrent);
         precurrent = precurrent->next;
+    }
+}
+
+void SolveConflict(CAR *p)
+{
+    switch (p->justment)
+    {
+    case 233:
+        p->turn[3] = 2;
+        break;
+    case 234:
+        p->turn[3] = 3;
+        break;
+    case 113:
+        p->turn[3] = 1;
+        break;
+    case 114:
+        p->turn[3] = 1 + 2 * RandInt(0, 1);
+        break;
+    case 121:
+        p->turn[3] = 1;
+        break;
+    case 122:
+        p->turn[3] = RandInt(1, 2);
+        break;
+    default:
+        PutAsc(p->x + 30, p->y, "Solve error", WHITE, 2, 2);
     }
 }
 
@@ -275,6 +303,7 @@ void CarSingle(CAR *car, CAR *p, CAR *prep, CAR *turn)
         break; //红灯停，不对车的位置及所在链表进行操作
     //丁字路口单独处理
     case 4:
+        SolveConflict(p);
         if ((GetLightStatusT(p->justment, p->turn[place - 1], 750, 170)) && !TurnPreScan(car, p))
         { //绿灯行
             PreScan(turn, p);
@@ -333,6 +362,7 @@ int GetLightStatusC(int just, int turn, int x, int y)
         return 0;
     }
 }
+
 /*******获取丁字路口红绿灯状态函数***************************
  * int GetLightStatusT(int just, int turn, int x, int y)
  * 参数：            车辆当前车道 要走的方向   路口中心坐标
@@ -359,6 +389,7 @@ int GetLightStatusT(int just, int turn, int x, int y)
         return 0;
     }
 }
+
 //判断车是否在路口内是返回1否返回0
 int JudgeInCross(CAR *p, int range)
 {
@@ -380,6 +411,7 @@ int JudgeInCross(CAR *p, int range)
         return 0;
 }
 
+//控制路口内车辆
 void TurnCar(CAR *car, CAR *p, CAR *prep)
 {
     char a[5]; //调bug专用
@@ -415,6 +447,7 @@ void TurnCar(CAR *car, CAR *p, CAR *prep)
     }
 }
 
+//控制车辆直行
 void TurnStrightCar(CAR *p)
 {
     MoveCar(p);
@@ -423,6 +456,7 @@ void TurnStrightCar(CAR *p)
         p->count = 0;
 }
 
+//控制车辆左转
 void TurnLeftCar(CAR *car)
 {
     if (car->alarm == 0)
@@ -446,11 +480,12 @@ void TurnLeftCar(CAR *car)
         car->count = 0;
 }
 
+//控制车辆右转
 void TurnRightCar(CAR *car)
 {
     if (car->alarm == 0)
     {
-        if (JudgeInCross(car, 2) && car->count < 90)
+        if (JudgeInCross(car, 2) && car->count < 91)
         {
             car->angle -= 15;
             car->x = car->x - (int)(3 * sin(car->angle * PI / 180));
@@ -469,6 +504,7 @@ void TurnRightCar(CAR *car)
         car->count = 0;
 }
 
+//直行或转弯前预扫描将要进入的车道
 int TurnPreScan(CAR *car, CAR *p) //转弯前直道预扫描函数（共用）
 {
     CAR *current;
@@ -477,7 +513,7 @@ int TurnPreScan(CAR *car, CAR *p) //转弯前直道预扫描函数（共用）
     itoa(p->justment, a, 10);
     PutAsc(p->x + 300, p->y, a, WHITE, 2, 2);
     for (current = car->next; current != NULL; current = current->next)
-        if ((current->justment == pre) && (JudgeCross(current) == position))
+        if ((current->justment == pre) && (JudgeInCross(current, 30) == position))
             return 1;
     return 0;
 }
@@ -664,7 +700,6 @@ int ChangeJustment(CAR *p)
         }
         break;
     default:
-
         PutAsc(p->x, p->y, "turn error", RED, 1, 1);
     }
     return 0xffffff;
