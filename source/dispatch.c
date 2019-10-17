@@ -56,10 +56,10 @@ void InitCar(CAR *newcar)
         RoadU[] = {LL1, LL2},
         RoadD[] = {LR1, LR2, RR1, RR2},
         ang;
-    newcar->turn[0] = 3;
-    newcar->turn[1] = 3;
-    newcar->turn[2] = 3;
-    newcar->turn[3] = 3;
+    newcar->turn[0] = RandInt(1,3); //生成转向信息
+    newcar->turn[1] = RandInt(1,3);
+    newcar->turn[2] = RandInt(1,3);
+    newcar->turn[3] = RandInt(1,3);
     ang = 90 * RandInt(0, 3);
     newcar->angle = ang;
     switch (ang / 90)
@@ -159,10 +159,6 @@ void InitCar(CAR *newcar)
     default:
         PutAsc(500, 300, "Init Car Error", RED, 2, 2);
     }
-    // newcar->turn[0] = RandInt(1,3); //生成转向信息
-    // newcar->turn[1] = RandInt(1,3);
-    // newcar->turn[2] = RandInt(1,3);
-    // newcar->turn[3] = RandInt(1,3);
     newcar->std_speed = RandInt(1, 16); //生成初始速度
     newcar->speed = newcar->std_speed;  //当前速度=初始速度
     newcar->color = RandInt(2, 8);      //车颜色随机
