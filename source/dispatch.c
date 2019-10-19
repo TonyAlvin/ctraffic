@@ -31,7 +31,9 @@ void TurnStrightCar(CAR *p);                            //控制车辆直行
 int TurnPreScan(CAR *car, CAR *p);                      //转弯前预扫描函数，用于判断前方路口是否压车至本路口
 int GetLightStatusC(int just, int turn, int x, int y);  //获取十字路口当前车辆是否通行
 int GetLightStatusT(int just, int turn, int x, int y);  //获取丁字路口当前车辆是否通行
-void ExScan(CAR *car, int just);
+void ExScan(CAR *car, int just);                        //扫描转弯后要进入的车道是否堆满
+void TransformConfirm(CAR *tar);                        //判断是否需要变道
+void transform_lane(CAR *tar, int flag);                //控制车辆变道
 
 //随机数发生函数，返回一个从min到max的随机数
 int RandInt(int min, int max)
@@ -159,11 +161,11 @@ void InitCar(CAR *newcar)
     default:
         PutAsc(500, 300, "Init Car Error", RED, 2, 2);
     }
-    newcar->std_speed = RandInt(1, 16); //生成初始速度
-    newcar->speed = newcar->std_speed;  //当前速度=初始速度
-    newcar->color = RandInt(2, 8);      //车颜色随机
-    newcar->alarm = 0;                  //与前车距离初始化为零
-    newcar->flag = 0;                   //驶出屏幕标记，初始化为零
+    newcar->std_speed = RandInt(3, 8); //生成初始速度
+    newcar->speed = newcar->std_speed; //当前速度=初始速度
+    newcar->color = RandInt(2, 8);     //车颜色随机
+    newcar->alarm = 0;                 //与前车距离初始化为零
+    newcar->flag = 0;                  //驶出屏幕标记，初始化为零
     newcar->count = 0;
     // DrawCar(newcar);
 }
@@ -188,11 +190,11 @@ void CreatCarList(CAR **head, int n)
 /*******************************************
  * 函数功能：车辆整体调度
  * 参数： 车辆链表头
- * 返回值：无
+ * 返回值：无,
  * *****************************************/
 void CarListDispatch(CAR *car, CAR *turn)
 {
-    CAR *road, *current, *precurrent;
+    CAR *road, *current, *precurrent, *newcar;
     road = car;
     NormalControl(2);
     precurrent = road;
@@ -206,6 +208,13 @@ void CarListDispatch(CAR *car, CAR *turn)
     {
         TurnCar(car, current, precurrent);
         precurrent = precurrent->next;
+    }
+    if (RandInt(0, 100) > 98)
+    {
+        newcar = (CAR *)malloc(sizeof(CAR));
+        InitCar(newcar);
+        newcar->next = car->next;
+        car->next = newcar;
     }
 }
 
@@ -277,13 +286,29 @@ void CarSingle(CAR *car, CAR *p, CAR *prep, CAR *turn)
 {
     char a[5];
     int place = JudgeCross(p);
+    if (p->x < 0 || p->x > 1024 || p->y < 0 || p->y > 768)
+    {
+        prep = p->next;
+        free(p);
+        return;
+    }
     switch (place)
     {
     //非路口只需判断前方有无车辆即可行驶
     case 0:
-        PreScan(car, p);
-        SolveAlarm(p);
-        MoveCar(p);
+        if (p->flag == 0)
+        {
+            // PreScan(car, p);
+            SolveAlarm(p);
+            MoveCar(p);
+        }
+        else
+        {
+            transform_lane(p, 1);
+            // PreScan(car, p);
+            SolveAlarm(p);
+            MoveCar(p);
+        }
         break;
     //十字路口统一处理
     case 1:
@@ -297,7 +322,8 @@ void CarSingle(CAR *car, CAR *p, CAR *prep, CAR *turn)
             prep->next = p->next; //将车移入路口链表
             p->next = turn->next;
             turn->next = p;
-            PutAsc(p->x, p->y, "IN", RED, 2, 2);
+            itoa(p->turn[place - 1], a, 10);
+            PutAsc(p->x, p->y, a, RED, 2, 2);
             return; //将车移出后单车在turn car函数内处理
         }
         break; //红灯停，不对车的位置及所在链表进行操作
@@ -434,10 +460,11 @@ void TurnCar(CAR *car, CAR *p, CAR *prep)
     DrawCar(p);
     if (p->count == 0) //判断车辆驶出路口，则移出路口链表，移入正常链表
     {
-        MoveCar(p);
+        MoveCar(p); //先移动一小段确保出路口
         itoa(p->justment, a, 10);
         PutAsc(p->x + 50, p->y + 32, a, WHITE, 2, 2);
         p->justment = ChangeJustment(p);
+        TransformConfirm(p);
         prep->next = p->next;
         p->next = car->next;
         car->next = p;
@@ -516,6 +543,75 @@ int TurnPreScan(CAR *car, CAR *p) //转弯前直道预扫描函数（共用）
         if ((current->justment == pre) && (JudgeInCross(current, 30) == position))
             return 1;
     return 0;
+}
+
+void TransformConfirm(CAR *tar)
+{
+    switch (tar->justment)
+    {
+    case 113:
+        if (tar->turn[3] == 3)
+            tar->flag = 1;
+        break;
+    case 143:
+        if (tar->turn[2] == 3)
+            tar->flag = 1;
+        break;
+    case 144:
+        if (tar->turn[2] == 2)
+            tar->flag = 1;
+        break; //走向路口3
+    case 111:
+        if (tar->turn[0] == 2)
+            tar->flag = 1;
+        break;
+    case 112:
+        if (tar->turn[0] == 3)
+            tar->flag = 1;
+        break;
+    case 141:
+        if (tar->turn[1] == 2)
+            tar->flag = 1;
+        break;
+    case 142: //走向路口0
+        if (tar->turn[1] == 3)
+            tar->flag = 1;
+        break;
+    case 213:
+        if (tar->turn[0] == 3)
+            tar->flag = 1;
+        break;
+    case 214:
+        if (tar->turn[0] == 2)
+            tar->flag = 1;
+        break;
+    case 211:
+        if (tar->turn[1] == 2)
+            tar->flag = 1;
+        break;
+    case 212:
+        if (tar->turn[1] == 3)
+            tar->flag = 1;
+        break;
+    case 231:
+        if (tar->turn[2] == 2)
+            tar->flag = 1;
+        break;
+    case 232:
+        if (tar->turn[2] == 3)
+            tar->flag = 1;
+        break;
+    case 233:
+        if (tar->turn[3] == 3)
+            tar->flag = 1;
+        break;
+    case 234:
+        if (tar->turn[3] == 2)
+            tar->flag = 1;
+        break;
+    default:
+        break;
+    }
 }
 
 //直道扫描函数（共用）
@@ -749,141 +845,150 @@ void SolveAlarm(CAR *p)
 
 void transform_lane(CAR *tar, int flag)
 {
-    if (flag == 1)
+    CAR *new = NULL;
+    int i;
+    if (tar->count == 0)
     {
-        switch (tar->justment)
+        new = (CAR *)malloc(sizeof(CAR));
+        new->next = tar->next->next;
+        tar->next = new;
+        new->color = -1;
+    }
+    if (tar->justment % 2 == 0)
+    {
+        i = tar->justment - 1;
+    }
+    else
+    {
+        i = tar->justment + 1;
+    }
+    tar->justment = i;
+    switch (tar->justment)
+    {
+    case 111:
+    case 113:
+    case 141:
+    case 143:
+        if (tar->count == 0)
         {
-        case 111:
-        case 141:
-            if (tar->count >= 0 && tar->count < 5)
-            {
-                tar->count++;
-            }
-            else if (tar->count <= 9)
-            {
-
-                tar->count++;
-            }
-            if (tar->count == 10)
-            {
-                tar->count = 0;
-            }
-
-        case 112:
-        case 142:
-            if (tar->count >= 0 && tar->count < 5)
-            {
-                tar->count++;
-            }
-            else if (tar->count <= 9)
-            {
-
-                tar->count++;
-            }
-            if (tar->count == 10)
-            {
-                tar->count = 0;
-            }
-
-        case 113:
-        case 143:
-            if (tar->count >= 0 && tar->count < 5)
-            {
-                tar->count++;
-            }
-            else if (tar->count <= 9)
-            {
-
-                tar->count++;
-            }
-            if (tar->count == 10)
-            {
-                tar->count = 0;
-            }
-
-        case 114:
-        case 144:
-            if (tar->count >= 0 && tar->count < 5)
-            {
-                tar->count++;
-            }
-            else if (tar->count <= 9)
-            {
-
-                tar->count++;
-            }
-            if (tar->count == 10)
-            {
-                tar->count = 0;
-            }
-
-        case 211:
-        case 231:
-            if (tar->count >= 0 && tar->count < 5)
-            {
-                tar->count++;
-            }
-            else if (tar->count <= 9)
-            {
-
-                tar->count++;
-            }
-            if (tar->count == 10)
-            {
-                tar->count = 0;
-            }
-
-        case 212:
-        case 232:
-            if (tar->count >= 0 && tar->count < 5)
-            {
-                tar->count++;
-            }
-            else if (tar->count <= 9)
-            {
-
-                tar->count++;
-            }
-            if (tar->count == 10)
-            {
-                tar->count = 0;
-            }
-
-        case 213:
-        case 233:
-            if (tar->count >= 0 && tar->count < 5)
-            {
-                tar->count++;
-            }
-            else if (tar->count <= 9)
-            {
-
-                tar->count++;
-            }
-            if (tar->count == 10)
-            {
-                tar->count = 0;
-            }
-
-        case 214:
-        case 234:
-            if (tar->count >= 0 && tar->count < 5)
-            {
-
-                tar->count++;
-            }
-            else if (tar->count <= 9)
-            {
-
-                tar->count++;
-            }
-            if (tar->count == 10)
-            {
-                tar->count = 0;
-            }
-
-        default:
-            break;
+            new->x = tar->x;
+            new->y = tar->y + 20;
         }
+        if (tar->count >= 0 && tar->count < 4)
+        {
+            tar->y = tar->y - 5;
+            tar->count++;
+        }
+        else if (tar->count == 4)
+        {
+            tar->count = 0;
+            tar->flag = 0;
+            if (tar->justment % 2 == 0)
+            {
+                tar->justment = tar->justment - 1;
+            }
+            else
+            {
+                tar->justment = tar->justment + 1;
+            }
+            tar->next = new->next;
+            free(new);
+        }
+        break;
+    case 112:
+    case 114:
+    case 142:
+    case 144:
+        if (tar->count == 0)
+        {
+            new->x = tar->x;
+            new->y = tar->y - 20;
+        }
+        if (tar->count >= 0 && tar->count < 4)
+        {
+            tar->y = tar->y + 5;
+            tar->count++;
+        }
+        else if (tar->count == 4)
+        {
+            tar->count = 0;
+            tar->flag = 0;
+            if (tar->justment % 2 == 0)
+            {
+                tar->justment = tar->justment - 1;
+            }
+            else
+            {
+                tar->justment = tar->justment + 1;
+            }
+            tar->next = new->next;
+            free(new);
+        }
+        break;
+
+    case 211:
+    case 213:
+    case 231:
+    case 233:
+        if (tar->count == 0)
+        {
+            new->x = tar->x + 20;
+            new->y = tar->y;
+        }
+        if (tar->count >= 0 && tar->count < 4)
+        {
+            tar->x = tar->x - 5;
+            tar->count++;
+        }
+        if (tar->count == 4)
+        {
+            tar->count = 0;
+            tar->flag = 0;
+            if (tar->justment % 2 == 0)
+            {
+                tar->justment = tar->justment - 1;
+            }
+            else
+            {
+                tar->justment = tar->justment + 1;
+            }
+            tar->next = new->next;
+            free(new);
+        }
+        break;
+    case 212:
+    case 214:
+    case 232:
+    case 234:
+
+        if (tar->count == 0)
+        {
+            new->x = tar->x - 20;
+            new->y = tar->y;
+        }
+        if (tar->count >= 0 && tar->count < 4)
+        {
+            tar->x = tar->x + 5;
+            tar->count++;
+        }
+        if (tar->count == 4)
+        {
+            tar->count = 0;
+            tar->flag = 0;
+            if (tar->justment % 2 == 0)
+            {
+                tar->justment = tar->justment - 1;
+            }
+            else
+            {
+                tar->justment = tar->justment + 1;
+            }
+            tar->next = new->next;
+            free(new);
+        }
+        break;
+    default:
+        PutAsc(tar->x, tar->y, "bad justment", RED, 2, 2);
+        break;
     }
 }

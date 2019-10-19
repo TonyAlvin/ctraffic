@@ -135,6 +135,8 @@ void DrawCar(CAR *car)
      int color = car->color;
      double a = (car->angle) * PI / 180;
      int tou[16], wei[16], ch[8], ding[8], d1[6], d2[6], d3[6], d4[6];
+     if (car->color < 0)
+          return;
      //³µÍ·
      tou[0] = x + A * 8.6 * cos(54.5 * PI / 180 + a);
      tou[1] = y - A * 8.6 * sin(54.5 * PI / 180 + a);
