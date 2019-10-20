@@ -38,10 +38,10 @@ void CountRunTimes(void)
 int main()
 {
     int i;
-    CAR *a, *b;
+    CAR *a, *b, *newcar;
     SVGA_Init();
     CountRunTimes();
-    CreatCarList(&a, 2);
+    CreatCarList(&a,3);
     CreatCarList(&b, 0);
     // Set_Pal_File(".\\resource\\svga\\win.act");
     setbkcolor(BLACK);

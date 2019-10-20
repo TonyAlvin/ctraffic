@@ -42,7 +42,7 @@ int RandInt(int min, int max)
     static unsigned int temp = 0;
     if (temp == 0)
         temp = (unsigned)time(NULL);
-    srand(temp * temp);
+    srand(clock() * temp * 123);
     temp *= 234;
     return rand() % (max - min + 1) + min;
 }
@@ -197,7 +197,7 @@ void CarListDispatch(CAR *car, CAR *turn)
 {
     CAR *road, *current, *precurrent, *newcar;
     road = car;
-    RefreshRoad();
+    // RefreshRoad();
     NormalControl(2);
     precurrent = road;
     for (current = precurrent->next; current != NULL; current = precurrent->next)
@@ -211,13 +211,13 @@ void CarListDispatch(CAR *car, CAR *turn)
         TurnCar(car, current, precurrent);
         precurrent = precurrent->next;
     }
-    // if (RandInt(0, 100) > 90)
-    // {
-    //     newcar = (CAR *)malloc(sizeof(CAR));
-    //     InitCar(newcar);
-    //     newcar->next = car->next;
-    //     car->next = newcar;
-    // }
+    if (RandInt(0, 10000) > 9800)
+    {
+        newcar = (CAR *)malloc(sizeof(CAR));
+        InitCar(newcar);
+        newcar->next = car->next;
+        car->next = newcar;
+    }
 }
 
 void SolveConflict(CAR *p)
@@ -288,9 +288,9 @@ void CarSingle(CAR *car, CAR *p, CAR *prep, CAR *turn)
 {
     char a[5];
     int place = JudgeCross(p);
-    if (p->x < 0 || p->x > 1024 || p->y < 0 || p->y > 768)
+    if (p->x < 0 || p->x > 1023 || p->y < 0 || p->y > 767)
     {
-        prep = p->next;
+        prep->next = p->next;
         free(p);
         return;
     }
@@ -326,7 +326,7 @@ void CarSingle(CAR *car, CAR *p, CAR *prep, CAR *turn)
         { //绿灯行
             // PreScan(turn, p);
             // p->speed = p->speed / 4;//进入路口减速慢行
-            SolveAlarm(p);
+            // SolveAlarm(p);
             MoveCar(p);
             prep->next = p->next; //将车移入路口链表
             p->next = turn->next;
@@ -343,7 +343,7 @@ void CarSingle(CAR *car, CAR *p, CAR *prep, CAR *turn)
         { //绿灯行
             // PreScan(turn, p);
             // p->speed = p->speed / 4;//进入路口减速慢行
-            SolveAlarm(p);
+            // SolveAlarm(p);
             MoveCar(p);
             prep->next = p->next; //将车移入路口链表
             p->next = turn->next;
@@ -475,7 +475,8 @@ void TurnCar(CAR *car, CAR *p, CAR *prep)
         // PutAsc(p->x + 50, p->y + 32, a, WHITE, 2, 2);
         p->justment = ChangeJustment(p);
         TransformConfirm(p);
-        // p->flag = 1;//测试变道用
+        // if (p->x > 200 && p->x < 700 && p->y > 120 && p->y < 720)
+        //     p->flag = 1; //测试变道用
         prep->next = p->next;
         p->next = car->next;
         car->next = p;
@@ -497,13 +498,13 @@ void TurnStrightCar(CAR *p)
 //控制车辆左转
 void TurnLeftCar(CAR *car)
 {
-    if (car->alarm == 0)
+    if (1)
     {
-        if (JudgeInCross(car, 2) && car->count < 108)
+        if (JudgeInCross(car, 14) && car->count < 106)
         {
             car->angle += 6;
-            car->x = car->x - (int)(11.2 * sin(car->angle * PI / 180));
-            car->y = car->y - (int)(11.2 * cos(car->angle * PI / 180));
+            car->x = car->x - (int)(9 * sin(car->angle * PI / 180));
+            car->y = car->y - (int)(9 * cos(car->angle * PI / 180));
             car->count += 6;
         }
         else
@@ -521,13 +522,13 @@ void TurnLeftCar(CAR *car)
 //控制车辆右转
 void TurnRightCar(CAR *car)
 {
-    if (car->alarm == 0)
+    if (1)
     {
-        if (JudgeInCross(car, 2) && car->count < 101)
+        if (JudgeInCross(car, 12) && car->count < 99)
         {
             car->angle -= 10;
-            car->x = car->x - (int)(4.5 * sin(car->angle * PI / 180));
-            car->y = car->y - (int)(4.5 * cos(car->angle * PI / 180));
+            car->x = car->x - (int)(5 * sin(car->angle * PI / 180));
+            car->y = car->y - (int)(5 * cos(car->angle * PI / 180));
             car->count += 10;
         }
         else
@@ -854,22 +855,24 @@ void SolveAlarm(CAR *p)
     }
 }
 
+/***********************************
+ *  变道扫描函数
+ *  输入值：含全部车的链表；当前车
+ *  返回值：是否能变道：0 可变道
+ *                    1 不可变
+***********************************/
 int transprescan(CAR *car, CAR *tar)
 {
     CAR *current;
     int i;
     CAR *AddedCar = NULL;
     if (tar->justment % 2 == 0)
-    {
         i = tar->justment - 1;
-    }
     else
-    {
         i = tar->justment + 1;
-    }
     for (current = car->next; current != NULL; current = current->next)
     {
-        if (current->justment == i)
+        if ((current->justment == i) && current != tar->next)
         {
             switch (i)
             {
@@ -907,10 +910,10 @@ int transprescan(CAR *car, CAR *tar)
                     return 1;
             default:
                 PutAsc(tar->x, tar->y, "tran scan error", RED, 2, 2);
-                break;
             }
         }
     }
+    return 0;
 }
 
 void transform_lane(CAR *tar)
@@ -944,7 +947,7 @@ void transform_lane(CAR *tar)
         if (tar->count == 0)
         {
             AddedCar->x = tar->x;
-            AddedCar->y = tar->y - 20;
+            AddedCar->y = tar->y - 25;
         }
         if (tar->count >= 0 && tar->count < 4)
         {
@@ -955,6 +958,7 @@ void transform_lane(CAR *tar)
         {
             tar->count = 0;
             tar->flag = 0;
+            tar->y = tar->y + 4;
             if (tar->justment % 2 == 0)
             {
                 tar->justment = tar->justment - 1;
@@ -964,6 +968,7 @@ void transform_lane(CAR *tar)
                 tar->justment = tar->justment + 1;
             }
             tar->next = AddedCar->next;
+            PutAsc(tar->x + 150, tar->y, "F tran", WHITE, 2, 2);
             if (AddedCar)
                 free(AddedCar);
         }
@@ -975,7 +980,7 @@ void transform_lane(CAR *tar)
         if (tar->count == 0)
         {
             AddedCar->x = tar->x;
-            AddedCar->y = tar->y - 20;
+            AddedCar->y = tar->y - 25;
         }
         if (tar->count >= 0 && tar->count < 4)
         {
@@ -986,6 +991,7 @@ void transform_lane(CAR *tar)
         {
             tar->count = 0;
             tar->flag = 0;
+            tar->y = tar->y - 4;
             if (tar->justment % 2 == 0)
             {
                 tar->justment = tar->justment - 1;
@@ -995,6 +1001,7 @@ void transform_lane(CAR *tar)
                 tar->justment = tar->justment + 1;
             }
             tar->next = AddedCar->next;
+            PutAsc(tar->x + 150, tar->y, "F tran", WHITE, 2, 2);
             if (AddedCar)
                 free(AddedCar);
         }
@@ -1006,7 +1013,7 @@ void transform_lane(CAR *tar)
     case 233:
         if (tar->count == 0)
         {
-            AddedCar->x = tar->x + 20;
+            AddedCar->x = tar->x + 25;
             AddedCar->y = tar->y;
         }
         if (tar->count >= 0 && tar->count < 4)
@@ -1018,6 +1025,7 @@ void transform_lane(CAR *tar)
         {
             tar->count = 0;
             tar->flag = 0;
+            tar->x = tar->x + 4;
             if (tar->justment % 2 == 0)
             {
                 tar->justment = tar->justment - 1;
@@ -1027,6 +1035,7 @@ void transform_lane(CAR *tar)
                 tar->justment = tar->justment + 1;
             }
             tar->next = AddedCar->next;
+            PutAsc(tar->x + 150, tar->y, "F tran", WHITE, 2, 2);
             if (AddedCar)
                 free(AddedCar);
         }
@@ -1038,7 +1047,7 @@ void transform_lane(CAR *tar)
 
         if (tar->count == 0)
         {
-            AddedCar->x = tar->x - 20;
+            AddedCar->x = tar->x - 25;
             AddedCar->y = tar->y;
         }
         if (tar->count >= 0 && tar->count < 4)
@@ -1050,6 +1059,7 @@ void transform_lane(CAR *tar)
         {
             tar->count = 0;
             tar->flag = 0;
+            tar->x = tar->x - 4;
             if (tar->justment % 2 == 0)
             {
                 tar->justment = tar->justment - 1;
@@ -1059,6 +1069,7 @@ void transform_lane(CAR *tar)
                 tar->justment = tar->justment + 1;
             }
             tar->next = AddedCar->next;
+            PutAsc(tar->x + 150, tar->y, "F tran", WHITE, 2, 2);
             if (AddedCar)
                 free(AddedCar);
         }
