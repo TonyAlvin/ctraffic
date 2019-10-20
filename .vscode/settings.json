@@ -12,7 +12,12 @@
         "fz_s.C": "cpp",
         "CAR_S.C": "cpp",
         "all.h": "c",
-        "ai.h": "c"
+        "ai.h": "c",
+        "CAR_1.C": "cpp",
+        "CAR_2.C": "cpp",
+        "DAOHANG.C": "cpp",
+        "TOGETHER.C": "cpp",
+        "MAIN1.C": "cpp"
     },
     "files.encoding": "gb2312",
     "git.ignoreLimitWarning": true,
