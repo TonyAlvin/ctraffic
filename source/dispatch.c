@@ -33,8 +33,8 @@ int GetLightStatusC(int just, int turn, int x, int y);  //获取十字路口当前车辆是
 int GetLightStatusT(int just, int turn, int x, int y);  //获取丁字路口当前车辆是否通行
 void ExScan(CAR *car, int just);                        //扫描转弯后要进入的车道是否堆满
 void TransformConfirm(CAR *tar);                        //判断是否需要变道
-int transprescan(CAR *car, CAR *tar);                   //变道前预扫描函数
-void transform_lane(CAR *tar);                          //控制车辆变道
+int TransPreScan(CAR *car, CAR *tar);                   //变道前预扫描函数
+void TransformLane(CAR *tar);                           //控制车辆变道
 
 //随机数发生函数，返回一个从min到max的随机数
 int RandInt(int min, int max)
@@ -197,7 +197,7 @@ void CarListDispatch(CAR *car, CAR *turn)
 {
     CAR *road, *current, *precurrent, *newcar;
     road = car;
-    // RefreshRoad();
+    RefreshRoad();
     NormalControl(2);
     precurrent = road;
     for (current = precurrent->next; current != NULL; current = precurrent->next)
@@ -205,13 +205,14 @@ void CarListDispatch(CAR *car, CAR *turn)
         CarSingle(car, current, precurrent, turn);
         precurrent = precurrent->next;
     }
+    NormalControl(2);
     precurrent = turn;
     for (current = precurrent->next; current != NULL; current = precurrent->next)
     {
         TurnCar(car, current, precurrent);
         precurrent = precurrent->next;
     }
-    if (RandInt(0, 10000) > 9800)
+    if (RandInt(0, 10000) > 8000)
     {
         newcar = (CAR *)malloc(sizeof(CAR));
         InitCar(newcar);
@@ -306,10 +307,10 @@ void CarSingle(CAR *car, CAR *p, CAR *prep, CAR *turn)
         }
         else //需要变道行驶，为前方转弯做准备
         {
-            if (!transprescan(car, p))
+            if (!TransPreScan(car, p))
             {
                 PutAsc(p->x + 150, p->y, "tran", WHITE, 2, 2);
-                transform_lane(p);
+                TransformLane(p);
             }
             else
                 p->alarm = 1;
@@ -454,6 +455,8 @@ void TurnCar(CAR *car, CAR *p, CAR *prep)
     switch (p->turn[JudgeInCross(p, 20) - 1])
     {
     case 1: //直行
+        PreScan(car, p);
+        SolveAlarm(p);
         TurnStrightCar(p);
         break;
     case 2: //左转
@@ -464,6 +467,7 @@ void TurnCar(CAR *car, CAR *p, CAR *prep)
         break;
     default: //错误处理
         // p->justment == ChangeJustment(p);
+        p->count = 0;
         PutAsc(p->x, p->y, "bad turn", RED, 1, 1);
         break;
     }
@@ -500,11 +504,11 @@ void TurnLeftCar(CAR *car)
 {
     if (1)
     {
-        if (JudgeInCross(car, 14) && car->count < 106)
+        if (JudgeInCross(car, 7) && car->count < 106)
         {
             car->angle += 6;
-            car->x = car->x - (int)(9 * sin(car->angle * PI / 180));
-            car->y = car->y - (int)(9 * cos(car->angle * PI / 180));
+            car->x = car->x - (int)(8.2 * sin(car->angle * PI / 180));
+            car->y = car->y - (int)(8.2 * cos(car->angle * PI / 180));
             car->count += 6;
         }
         else
@@ -539,7 +543,7 @@ void TurnRightCar(CAR *car)
         car->angle -= 360;
     else if (car->angle < 0)
         car->angle += 360;
-    if (!JudgeInCross(car, 21))
+    if (!JudgeInCross(car, 22))
         car->count = 0;
 }
 
@@ -627,6 +631,7 @@ void TransformConfirm(CAR *tar)
 }
 
 //直道扫描函数（共用）
+//参数：car所有车 tar目标车辆
 void PreScan(CAR *car, CAR *tar)
 {
     CAR *current;
@@ -838,6 +843,7 @@ void MoveCar(CAR *p)
 //处理前方报警的函数(共用)
 void SolveAlarm(CAR *p)
 {
+    char a[5];
     switch (p->alarm)
     {
     case 0:                      //没有警报
@@ -848,8 +854,10 @@ void SolveAlarm(CAR *p)
         break;
     case 2:           //如果在最短距离内，有警报
         p->speed = 0; //停车
+        break;
     default:
-        PutAsc(p->x, p->y, "bad car alarm", RED, 2, 2);
+        itoa(p->alarm, a, 10);
+        PutAsc(p->x, p->y, a, WHITE, 2, 2);
         delay(1000);
         break;
     }
@@ -861,7 +869,7 @@ void SolveAlarm(CAR *p)
  *  返回值：是否能变道：0 可变道
  *                    1 不可变
 ***********************************/
-int transprescan(CAR *car, CAR *tar)
+int TransPreScan(CAR *car, CAR *tar)
 {
     CAR *current;
     int i;
@@ -916,7 +924,7 @@ int transprescan(CAR *car, CAR *tar)
     return 0;
 }
 
-void transform_lane(CAR *tar)
+void TransformLane(CAR *tar)
 {
     CAR *AddedCar = NULL;
     if (tar->count == 0)
@@ -1075,6 +1083,7 @@ void transform_lane(CAR *tar)
         }
         break;
     default:
+        tar->flag = 0;
         PutAsc(tar->x + 150, tar->y, "bad tran", WHITE, 2, 2);
         break;
     }

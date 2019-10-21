@@ -61,7 +61,7 @@ int main()
                 {
                     ButtonRefresh();
                     MouseRead();
-                    if (bioskey(1) == START)
+                    if (bioskey(0) == START)
                         break;
                 }
             else if (i == ESC)
