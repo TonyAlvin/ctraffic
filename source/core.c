@@ -1,73 +1,26 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+/*******************************************
+ * *         *****主函数文件******
+ * ***作者：董国庆
+ * ***创建时间：2019.7.10
+ * ****************************************/
 #include "svgasub.h"
 #include <graphics.h>
-#include "light.h"
 #include "mouse.h"
-#include "hanzi.h"
-#include "draw.h"
-#include "dispatch.h"
 #include "all.h"
-#include <bios.h>
+#include "menu.h"
 
 extern int MouseX;
 extern int MouseY;
 extern int MouseB;
 
-void CountRunTimes(void)
-{
-    int times = 0;
-    FILE *fp;
-    if ((fp = fopen(".\\resource\\data.dat", "rb+")) == NULL)
-    {
-        printf("open data.dat fail~");
-        delay(3000);
-        exit(1);
-    }
-    fscanf(fp, "###%d###", &times);
-    printf("No. %d Run", times);
-    times++;
-    rewind(fp);
-    fprintf(fp, "###%d###", times);
-    fclose(fp);
-    delay(1000);
-    return;
-}
-
 int main()
 {
-    int i;
-    CAR *a, *b, *newcar;
-    SVGA_Init();
-    CountRunTimes();
-    CreatCarList(&a,3);
-    CreatCarList(&b, 0);
+    CountRunTimes(); //记录运行次数
+    SVGA_Init();     //初始化图形界面
+    //设置windows调色板，可以开启16位色模式，本程序使用16色模式，不设置调色板
     // Set_Pal_File(".\\resource\\svga\\win.act");
-    setbkcolor(BLACK);
-    InitMouse();
-    DrawRoad();
-    DrawMenu();
-    while (1)
-    {
-        MouseRead();
-        ButtonRefresh();
-        CarListDispatch(a, b);
-        if (kbhit())
-        {
-            i = bioskey(0);
-            if (i == PAUSE)
-                while (1)
-                {
-                    ButtonRefresh();
-                    MouseRead();
-                    if (bioskey(0) == START)
-                        break;
-                }
-            else if (i == ESC)
-                exit(0);
-        }
-        // TurnLeftCar(a->next);
-        // DrawCar(a->next);
-    }
+    setbkcolor(BLACK); //设置背景色
+    InitMouse();       //初始化鼠标
+    menu();            //进入菜单选项
+    return 0;
 }

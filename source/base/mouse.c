@@ -298,11 +298,33 @@ int MouseOnWindow(int sx, int sy, int ex, int ey)
 		return 0;
 }
 
-/*检测鼠标是否在输入框上*/
-int MouseOnBox(BOX *box)
+/**************************************************************
+ * ***函数名int MousePressIn(int x1, int y1, int x2, int y2)
+ * ***参数(x1,y1)(x2,y2)为区域坐标
+ * ***返回值，1区域内按下，0其他情况
+***************************************************************/
+int MousePressIn(int x1, int y1, int x2, int y2)
 {
-	if (MS.mx > (box->bx0) && MS.mx < (box->bx0 + box->blen) && MS.my > (box->by0) && MS.my < (box->by0 + box->bwid))
+	if (MS.mx > x1 && MS.mx < x2 && MS.my > y1 && MS.my < y2 && LeftPress())
+	{
 		return 1;
+	}
 	else
+	{
 		return 0;
+	}
+}
+
+/****************************************************
+ * ***函数名，void MouseXY(int *x, int *y)
+ * ***参数，(x, y)存储坐标的指针
+ * ***返回值，void
+ * ***函数功能，将鼠标坐标写入 参数指针所指向的空间
+*****************************************************/
+void MouseXY(int *x, int *y)
+{
+	_AX = 0x03;
+	geninterrupt(0x33);
+	*x = _CX;
+	*y = _DX;
 }

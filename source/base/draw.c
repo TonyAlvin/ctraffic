@@ -325,7 +325,7 @@ void draw_bk(void)
      bar(STARTX + 2, STARTY, ENDX - 2, STARTY + 24);
 }
 
-void draw_btlight(BT *bt, int state)
+void draw_btlight(const BT *bt, int state)
 {
      setlinestyle(0, 0, 1);
      if (state == 0) //鼠标不在按钮上
@@ -357,7 +357,7 @@ void draw_btlight(BT *bt, int state)
      }
 }
 
-void draw_bt(BT *bt, int color)
+void draw_bt(const BT *bt, int color)
 {
      PutHZ12(bt->btx1, bt->bty1, bt->btname, color, 1, 1, 2, 0);
      draw_btlight(bt, MouseOnBT(bt));
@@ -366,7 +366,7 @@ void draw_bt(BT *bt, int color)
 void DrawMenu(void)
 {
      draw_bk();
-     draw_bt(&bt_czsm, DARKGRAY);
+     // draw_bt(&bt_czsm, DARKGRAY);
      draw_bt(&bt_gnjs, DARKGRAY);
      draw_bt(&bt_about, DARKGRAY);
      draw_bt(&bt_exit, DARKGRAY);
@@ -374,7 +374,7 @@ void DrawMenu(void)
 
 void ButtonRefresh(void)
 {
-     draw_bt(&bt_czsm, DARKGRAY);
+     // draw_bt(&bt_czsm, DARKGRAY);
      draw_bt(&bt_gnjs, DARKGRAY);
      draw_bt(&bt_about, DARKGRAY);
      draw_bt(&bt_exit, DARKGRAY);

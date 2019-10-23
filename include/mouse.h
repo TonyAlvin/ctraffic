@@ -22,6 +22,7 @@ int MouseRead(void);
 int LeftPress(void);                               //检测左键是否按下
 int MouseOnBT(struct BUTTON *bt);                  //检测鼠标是否在按钮上的函数
 int MouseOnWindow(int sx, int sy, int ex, int ey); //检测鼠标是否在窗口上的函数
-int MouseOnBox(struct INPUT_BOX *box);             //检测鼠标是否在输入框上
+int MousePressIn(int x1, int y1, int x2, int y2);  //检测鼠标是否在区域内按下
+void MouseXY(int *x, int *y);                      //获取鼠标坐标
 
 #endif

@@ -2,6 +2,7 @@
  *  
  * ***作者：董国庆
  * ***功能：创建车链表，车位置计算
+ * ***最后修改时间：2019.10.22
 *********************************************/
 #include <stdio.h>
 #include <graphics.h>
@@ -35,6 +36,7 @@ void ExScan(CAR *car, int just);                        //扫描转弯后要进入的车道
 void TransformConfirm(CAR *tar);                        //判断是否需要变道
 int TransPreScan(CAR *car, CAR *tar);                   //变道前预扫描函数
 void TransformLane(CAR *tar);                           //控制车辆变道
+void CoractJustment(CAR *p);                            //更正justment错误
 
 //随机数发生函数，返回一个从min到max的随机数
 int RandInt(int min, int max)
@@ -188,12 +190,68 @@ void CreatCarList(CAR **head, int n)
     (*current)->next = NULL;
 }
 
+/********************************************
+ * ***函数名,void InitCarNum(int *num)
+ * ***参数，存储车相对数量的地址，返回值，void
+ * ***函数功能，初始化调整车相对数量的滑块。
+*********************************************/
+void InitCarNum(int *num)
+{
+    setfillstyle(2, WHITE); //画滑块
+    bar(337, 720, 663, 750);
+    // setcolor(GREEN);
+    // setlinestyle(1, 0, 3);
+    // rectangle(my - 5, 723, my + 5, 747);
+    setcolor(YELLOW);
+    setfillstyle(1, YELLOW);
+    circle(350, 735, 12);
+    floodfill(350, 735, YELLOW);
+    PutAsc(333, 694, "MIN", GREEN, 2, 2);
+    PutAsc(620, 694, "MAX", RED, 2, 2);
+    PutHZ16(430, 694, "拖动滑块调整车数量", WHITE, 1, 1, 0, 0);
+    *num = 9950;
+}
+
+/********************************************
+ * ***函数名，void SetCarNum(int *num)
+ * ***返回值，int *num车的相对数量。参数，void
+ * ***函数功能：显示由用户决定生成车数辆的滑块。
+*********************************************/
+void SetCarNum(int *num)
+{
+    // char a[6];
+    int mx, my;
+    if (MousePressIn(350, 720, 650, 750)) //只有滑块状态改变的时候画滑块
+    {
+        MouseXY(&mx, &my);
+        MouseHide(); //隐藏鼠标，防止乱套
+        delay(20);
+        mx = (int)((mx - 350) / 5); //将长为300的滑块分为150份
+        my = mx * 5 + 350;
+        setfillstyle(2, WHITE); //画滑块
+        bar(337, 720, 663, 750);
+        // setcolor(GREEN);
+        // setlinestyle(1, 0, 3);
+        // rectangle(my - 5, 723, my + 5, 747);
+        setcolor(YELLOW);
+        setfillstyle(1, YELLOW);
+        circle(my, 735, 12);
+        floodfill(my, 735, YELLOW);
+        MouseShow(); //画完图显示鼠标
+        // setfillstyle(1, BLACK);
+        // bar(400, 700, 480, 720);
+        // itoa(9950 - mx * 5, a, 10);
+        // PutAsc(400, 700, a, WHITE, 2, 2);
+        *num = 9950 - mx * 15;
+    }
+}
+
 /*******************************************
  * 函数功能：车辆整体调度
  * 参数： 车辆链表头
  * 返回值：无,
  * *****************************************/
-void CarListDispatch(CAR *car, CAR *turn)
+void CarListDispatch(CAR *car, CAR *turn, int CarNum)
 {
     CAR *road, *current, *precurrent, *newcar;
     road = car;
@@ -212,7 +270,7 @@ void CarListDispatch(CAR *car, CAR *turn)
         TurnCar(car, current, precurrent);
         precurrent = precurrent->next;
     }
-    if (RandInt(0, 10000) > 8000)
+    if (RandInt(0, 10000) > CarNum)
     {
         newcar = (CAR *)malloc(sizeof(CAR));
         InitCar(newcar);
@@ -493,6 +551,8 @@ void TurnCar(CAR *car, CAR *p, CAR *prep)
 //控制车辆直行
 void TurnStrightCar(CAR *p)
 {
+    //路口减速慢行
+    p->speed = 2;
     MoveCar(p);
     p->count++;
     if (!JudgeInCross(p, 20))
@@ -502,49 +562,57 @@ void TurnStrightCar(CAR *p)
 //控制车辆左转
 void TurnLeftCar(CAR *car)
 {
-    if (1)
+    if (JudgeInCross(car, 9) && car->count < 106)
     {
-        if (JudgeInCross(car, 7) && car->count < 106)
-        {
-            car->angle += 6;
-            car->x = car->x - (int)(8.2 * sin(car->angle * PI / 180));
-            car->y = car->y - (int)(8.2 * cos(car->angle * PI / 180));
-            car->count += 6;
-        }
-        else
-            MoveCar(car);
-        car->count++;
+        car->angle += 6;
+        car->x = car->x - (int)(8.2 * sin(car->angle * PI / 180));
+        car->y = car->y - (int)(8.2 * cos(car->angle * PI / 180));
+        car->count += 6;
     }
+    else
+    {
+        //直行角度矫正
+        car->angle = (int)(car->angle / 90 + 0.5) * 90;
+        MoveCar(car);
+    }
+    car->count++;
     if (car->angle >= 360)
         car->angle -= 360;
     else if (car->angle < 0)
         car->angle += 360;
     if (!JudgeInCross(car, 20))
+    {
+        //转弯角度矫正
+        car->angle = (int)(car->angle / 90 + 0.5) * 90;
+        //转弯结束标记位
         car->count = 0;
+    }
 }
 
 //控制车辆右转
 void TurnRightCar(CAR *car)
 {
-    if (1)
+    if (JudgeInCross(car, 14) && car->count < 99)
     {
-        if (JudgeInCross(car, 12) && car->count < 99)
-        {
-            car->angle -= 10;
-            car->x = car->x - (int)(5 * sin(car->angle * PI / 180));
-            car->y = car->y - (int)(5 * cos(car->angle * PI / 180));
-            car->count += 10;
-        }
-        else
-            MoveCar(car);
-        car->count++;
+        car->angle -= 10;
+        car->x = car->x - (int)(5.2 * sin(car->angle * PI / 180));
+        car->y = car->y - (int)(5.2 * cos(car->angle * PI / 180));
+        car->count += 10;
     }
+    else
+        MoveCar(car);
+    car->count++;
     if (car->angle >= 360)
         car->angle -= 360;
     else if (car->angle < 0)
         car->angle += 360;
-    if (!JudgeInCross(car, 22))
+    if (!JudgeInCross(car, 22)) //判断出路口
+    {
+        //转弯角度矫正
+        car->angle = (int)(car->angle / 90 + 0.5) * 90;
+        //转弯结束标记位
         car->count = 0;
+    }
 }
 
 //直行或转弯前预扫描将要进入的车道
@@ -630,8 +698,11 @@ void TransformConfirm(CAR *tar)
     }
 }
 
-//直道扫描函数（共用）
-//参数：car所有车 tar目标车辆
+/******************************************
+ * ***函数名，void PreScan(CAR *car, CAR *tar)
+ * ***参数，car直道车链表，tar待扫描车辆
+ * ***函数功能，直道扫描函数（共用）
+******************************************/
 void PreScan(CAR *car, CAR *tar)
 {
     CAR *current;
@@ -715,8 +786,166 @@ void PreScan(CAR *car, CAR *tar)
                 break;
             default:
                 PutAsc(tar->x, tar->y, "bad justment", RED, 2, 2);
+                CoractJustment(tar);
                 break;
             }
+    }
+}
+
+/********************************************
+ * ***函数名，void CoractJustment(CAR *p)
+ * ***参数，要修正的车辆指针
+ * ***返回值，void
+ * ***函数功能，修正bad justment错误
+***********************************************/
+void CoractJustment(CAR *p)
+{
+    switch ((int)(p->angle / 90))
+    {
+    case 0:
+        if (p->x < 275)
+        {
+            if (p->y < 170)
+                p->justment = 203;
+            else if (p->y < 570)
+                p->justment = 213;
+            else
+                p->justment = 223;
+        }
+        else if (p->x < 310)
+        {
+            if (p->y < 170)
+                p->justment = 204;
+            else if (p->y < 570)
+                p->justment = 214;
+            else
+                p->justment = 224;
+        }
+        else if (p->x < 775)
+        {
+            if (p->y < 570)
+                p->justment = 233;
+            else
+                p->justment = 243;
+        }
+        else
+        {
+            if (p->y < 570)
+                p->justment = 234;
+            else
+                p->justment = 244;
+        }
+        break;
+    case 2:
+        if (p->x < 225)
+        {
+            if (p->y < 170)
+                p->justment = 201;
+            else if (p->y < 570)
+                p->justment = 211;
+            else
+                p->justment = 221;
+        }
+        else if (p->x < 310)
+        {
+            if (p->y < 170)
+                p->justment = 202;
+            else if (p->y < 570)
+                p->justment = 212;
+            else
+                p->justment = 222;
+        }
+        else if (p->x < 725)
+        {
+            if (p->y < 570)
+                p->justment = 231;
+            else
+                p->justment = 241;
+        }
+        else
+        {
+            if (p->y < 570)
+                p->justment = 232;
+            else
+                p->justment = 242;
+        }
+        break;
+    case 1:
+        if (p->y < 145)
+        {
+            if (p->x < 170)
+                p->justment = 101;
+            else if (p->x < 750)
+                p->justment = 111;
+            else
+                p->justment = 121;
+        }
+        else if (p->y < 170)
+        {
+            if (p->x < 170)
+                p->justment = 102;
+            else if (p->x < 750)
+                p->justment = 112;
+            else
+                p->justment = 122;
+        }
+        else if (p->y < 545)
+        {
+            if (p->x < 170)
+                p->justment = 131;
+            else if (p->x < 750)
+                p->justment = 141;
+            else
+                p->justment = 151;
+        }
+        else
+        {
+            if (p->x < 170)
+                p->justment = 132;
+            else if (p->x < 750)
+                p->justment = 142;
+            else
+                p->justment = 152;
+        }
+        break;
+    case 3:
+        if (p->y < 195)
+        {
+            if (p->x < 170)
+                p->justment = 103;
+            else if (p->x < 750)
+                p->justment = 113;
+            else
+                p->justment = 123;
+        }
+        else if (p->y < 220)
+        {
+            if (p->x < 170)
+                p->justment = 104;
+            else if (p->x < 750)
+                p->justment = 114;
+            else
+                p->justment = 124;
+        }
+        else if (p->y < 595)
+        {
+            if (p->x < 170)
+                p->justment = 133;
+            else if (p->x < 750)
+                p->justment = 143;
+            else
+                p->justment = 153;
+        }
+        else
+        {
+            if (p->x < 170)
+                p->justment = 134;
+            else if (p->x < 750)
+                p->justment = 144;
+            else
+                p->justment = 154;
+        }
+        break;
     }
 }
 
@@ -843,7 +1072,7 @@ void MoveCar(CAR *p)
 //处理前方报警的函数(共用)
 void SolveAlarm(CAR *p)
 {
-    char a[5];
+    // char a[5];
     switch (p->alarm)
     {
     case 0:                      //没有警报
@@ -856,8 +1085,8 @@ void SolveAlarm(CAR *p)
         p->speed = 0; //停车
         break;
     default:
-        itoa(p->alarm, a, 10);
-        PutAsc(p->x, p->y, a, WHITE, 2, 2);
+        // itoa(p->alarm, a, 10);
+        PutAsc(p->x, p->y, "bad alarm", WHITE, 2, 2);
         delay(1000);
         break;
     }
@@ -873,7 +1102,6 @@ int TransPreScan(CAR *car, CAR *tar)
 {
     CAR *current;
     int i;
-    CAR *AddedCar = NULL;
     if (tar->justment % 2 == 0)
         i = tar->justment - 1;
     else

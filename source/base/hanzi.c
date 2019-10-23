@@ -156,9 +156,9 @@ void PutHZ24(int x, int y, char *s, int color, int size, int distance, char fill
 		{
 			setcolor(color);
 			word[0] = *s;
-			PutAsc(x, y - 1, word, color, 2, 2);
+			PutAsc(x, y - 1, word, color, 2 * size, 2 * size);
 			s += 1;
-			x += 15;
+			x += 15 * size;
 		}
 		else
 		{

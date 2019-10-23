@@ -47,7 +47,7 @@
 #define WC 5         //停车线的邻域宽
 #define RATE 2       //车子的速度比率基准
 #define ALARMDIS 32  //车中心相距的警戒距离
-#define DIS 37       //短警戒距离(*考虑到转角及车身长，这是最长的*)
+#define DIS 60       //短警戒距离(*考虑到转角及车身长，这是最长的*)
 #define DIL 74       //长警戒距离
 
 /****************车道的宏定义****************/
@@ -117,10 +117,18 @@ struct CarStruct
 };
 typedef struct CarStruct CAR;
 
+struct TimeStruct
+{
+    unsigned int hr;
+    unsigned int min;
+    unsigned int sec;
+};
+typedef struct TimeStruct counter;
+
 /*各按钮的定义**非全局变量不改变值**只是按钮信息的定义*/
-static BT bt_czsm = {STARTX + 10, STARTY + 8, STARTX + 10 + 71, STARTY + 8 + 11, "操作说明F1", "关于本系统操作的介绍", BtIntro};
-static BT bt_gnjs = {STARTX + 81 + 20, STARTY + 8, STARTX + 81 + 20 + 71, STARTY + 19, "功能介绍F2", "关于本系统功能的简介", BtIntro};
-static BT bt_about = {STARTX + 172 + 20, STARTY + 8, STARTX + 172 + 20 + 71, STARTY + 19, "关于团队F3", "制作人员的简介", BtAbout};
-static BT bt_exit = {ENDX - 33 - 36, STARTY + 8, ENDX - 10, STARTY + 19, "退出ESC", "按下将退出系统", BtExit};
+// const static BT bt_czsm = {STARTX + 172 + 20, STARTY + 8, STARTX + 172 + 20 + 71, STARTY + 19,  "操作说明", "关于本系统操作的介绍", BtIntro};
+static BT bt_gnjs = {STARTX + 10, STARTY + 8, STARTX + 10 + 71, STARTY + 8 + 11, "功能介绍", "关于本系统功能的简介", BtFeature};
+static BT bt_about = {STARTX + 81 + 20, STARTY + 8, STARTX + 81 + 20 + 71, STARTY + 19, "关于团队", "制作人员的简介", BtAbout};
+static BT bt_exit = {ENDX - 33 - 36, STARTY + 8, ENDX - 10, STARTY + 19, "退出程序", "按下将退出系统", BtExit};
 
 #endif
