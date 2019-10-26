@@ -3,13 +3,14 @@
 #include <string.h>
 #include "svgasub.h"
 #include <graphics.h>
+#include <bios.h>
 #include "light.h"
 #include "mouse.h"
 #include "hanzi.h"
 #include "draw.h"
 #include "dispatch.h"
 #include "all.h"
-#include <bios.h>
+#include "ai.h"
 
 void welcome(void);               //欢迎界面
 void byebye(void);                //结束页面
@@ -17,6 +18,7 @@ void Simulation(void);            //仿真函数
 void CountRunTimes(void);         //记录运行次数
 void InitTimeCounter(counter *t); //初始化计时器
 void TimeCounter(counter *t);     //计时器
+void SetAIMode(int *ai_mode);     //智能模式选择
 
 /****************************************
  * 菜单函数：调度各个程序功能
@@ -25,9 +27,9 @@ void TimeCounter(counter *t);     //计时器
 *****************************************/
 void menu(void)
 {
-    welcome();
+    // welcome();
     Simulation();
-    byebye();
+    // byebye();
 }
 
 /****************************************
@@ -64,6 +66,7 @@ void Simulation(void)
 {
     int i;
     int car_num;      //存储车的数量
+    int ai_mode;      //存储ai模式
     CAR *stright_car; //直道车辆链表
     CAR *turn_car;    //路口车辆链表
     counter t;        //计时器
@@ -75,11 +78,28 @@ void Simulation(void)
     DrawRoad();                    //画马路
     DrawMenu();                    //画菜单
 
-    while (1) //总循环体
+    delay(40);
+    PutHZ16(400, 300, "准备就绪..", WHITE, 2, 2, 0, 0);
+    PutHZ16(350, 350, "按空格键开始仿真", WHITE, 2, 2, 0, 0);
+    while (1)
     {
+        MouseRead();
+        if (bioskey(1) == START)
+        {
+            setfillstyle(1, BLACK);
+            bar(350, 300, 699, 400);
+            break;
+        }
+    }
+
+    while (1) //仿真总循环体
+    {
+        SetAIMode(&ai_mode);
         SetCarNum(&car_num);                             //设置车数量
         MouseRead();                                     //刷新鼠标
         ButtonRefresh();                                 //刷新按钮显示按钮效果
+        RefreshRoad();                                   //刷新路面
+        AI_Dispatch(stright_car);                        //智能控制
         CarListDispatch(stright_car, turn_car, car_num); //车辆链表调度
         if (kbhit())                                     //键盘控制
         {
@@ -195,12 +215,14 @@ void welcome(void)
     MouseHide(); //暂时隐藏鼠标
     setfillstyle(1, DARKGRAY);
     setcolor(WHITE);
+
     //画一个由小变大的圆
     for (i = 0; i < 650; i += 5)
     {
         fillellipse(ENDX / 2, ENDY / 2, i, i);
         delay(10);
     }
+
     //显示信息
     for (i = 0; i < 4; i++)
     {
@@ -209,6 +231,7 @@ void welcome(void)
         delay(100);
     }
     PutHZ24(850, 743, "任意键继续...", WHITE, 1, 0, 1, 0);
+
     //按任意键继续
     while (1)
     {
@@ -256,5 +279,41 @@ void byebye(void)
         bar(593, 330, 730, 400);
         PutAsc(593, 330, "---~", WHITE, 4, 4);
         delay(500);
+    }
+}
+
+/**************************************************
+ * ***函数名，void SetAIMode(int *ai_mode)
+ * ***函数功能，选择红绿灯模式
+ * ***参数，
+ * ***返回值，红路灯模式代码
+***************************************************/
+void SetAIMode(int *ai_mode)
+{
+    // char a[6];
+    int mx, my;//鼠标坐标
+    int yse[20];
+    if (MousePressIn(860, 250, 900, 460)) //只有滑块状态改变的时候画滑块
+    {
+        MouseXY(&mx, &my);
+        MouseHide(); //隐藏鼠标，防止乱套
+        delay(20);
+        if(my )
+        setfillstyle(7, WHITE); //画滑块
+        bar(860, 250, 900, 460);
+
+        // setcolor(GREEN);
+        // setlinestyle(1, 0, 3);
+        // rectangle(my - 5, 723, my + 5, 747);
+        // setcolor(YELLOW);
+        // setfillstyle(1, YELLOW);
+        // circle(my, 735, 12);
+        // floodfill(my, 735, YELLOW);
+        MouseShow(); //画完图显示鼠标
+        // setfillstyle(1, BLACK);
+        // bar(400, 700, 480, 720);
+        // itoa(9950 - mx * 5, a, 10);
+        // PutAsc(400, 700, a, WHITE, 2, 2);
+        // *num = 9950 - mx * 15;
     }
 }

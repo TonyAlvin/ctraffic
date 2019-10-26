@@ -10,25 +10,26 @@
 #include <stdlib.h>
 #include <dos.h>
 #include <math.h>
+#include "all.h"
 #include "mouse.h"
+#include "dispatch.h"
 #include "draw.h"
 #include "hanzi.h"
+
+//测试bug用
 #include <string.h>
-#include "all.h"
-#include "dispatch.h"
-#include "light.h"
 
-#include <string.h> //测试bug用
-
+//函数声明（部分
 void SolveAlarm(CAR *p);                                //处理警报函数
 void MoveCar(CAR *p);                                   //直线移动车函数
+void MoveCarLite(CAR *p);                               //进入或驶出路口时移动一小段距离
 void CarSingle(CAR *car, CAR *p, CAR *prep, CAR *turn); //控制非路口内单个车还能输
 int ChangeJustment(CAR *p);                             //通过路口后更改车辆justment函数
 void PreScan(CAR *car, CAR *tar);                       //扫描前方车辆函数
-void TurnCar(CAR *car, CAR *p, CAR *prep);              //控制路口内车辆函数
+void TurnCar(CAR *car, CAR *turn, CAR *p, CAR *prep);   //控制路口内车辆函数
 void TurnLeftCar(CAR *p);                               //控制车辆左转
 void TurnRightCar(CAR *p);                              //控制车辆右转
-void TurnStrightCar(CAR *p);                            //控制车辆直行
+void TurnStrightCar(CAR *p, CAR *turn);                 //控制车辆直行
 int TurnPreScan(CAR *car, CAR *p);                      //转弯前预扫描函数，用于判断前方路口是否压车至本路口
 int GetLightStatusC(int just, int turn, int x, int y);  //获取十字路口当前车辆是否通行
 int GetLightStatusT(int just, int turn, int x, int y);  //获取丁字路口当前车辆是否通行
@@ -36,9 +37,14 @@ void ExScan(CAR *car, int just);                        //扫描转弯后要进入的车道
 void TransformConfirm(CAR *tar);                        //判断是否需要变道
 int TransPreScan(CAR *car, CAR *tar);                   //变道前预扫描函数
 void TransformLane(CAR *tar);                           //控制车辆变道
-void CoractJustment(CAR *p);                            //更正justment错误
+void CorrectJustment(CAR *p);                           //更正justment错误
+void CorrectCoordinate(CAR *p);                         //车辆驶出路口后矫正车道位置
 
-//随机数发生函数，返回一个从min到max的随机数
+/*********************************************
+ * ***函数名，int RandInt(int min, int max)
+ * ***参数，返回值：返回一个从min到max的随机数
+ * ***函数功能：随机数发生函数，
+ * ******************************************/
 int RandInt(int min, int max)
 {
     static unsigned int temp = 0;
@@ -50,10 +56,11 @@ int RandInt(int min, int max)
 }
 
 /*********************************************
+ * ***函数名，void InitCar(CAR *newcar)
  * 函数功能：初始化车辆；
- * 参数：newcar:车辆指针，dirt:路名1U、2D、3L、4R
+ * 参数：newcar:车辆指针
  * 返回值：void
- * ******************************************/
+***********************************************/
 void InitCar(CAR *newcar)
 {
     int RoadR[] = {UU1, UU2, DU1, DU2}, //存储路的坐标信息，方便随机生成
@@ -121,7 +128,7 @@ void InitCar(CAR *newcar)
         break;
     case 2:
         newcar->x = RoadU[RandInt(0, 1)];
-        newcar->y = 1;
+        newcar->y = 42;
         switch (newcar->x)
         {
         case LL1:
@@ -253,21 +260,28 @@ void SetCarNum(int *num)
  * *****************************************/
 void CarListDispatch(CAR *car, CAR *turn, int CarNum)
 {
+    // char a[5];
     CAR *road, *current, *precurrent, *newcar;
     road = car;
-    RefreshRoad();
-    NormalControl(2);
+    // itoa((getpixel(LEFT_X + 38, UP_Y - 58) == GREEN), a, 10);
+    // PutAsc(LEFT_X + 38, UP_Y - 58, a, WHITE, 2, 2);
+    // itoa(GetLightStatusC(202, 1, LEFT_X, UP_Y), a, 10);
+    // PutAsc(LEFT_X - 6, UP_Y, a, WHITE, 2, 2);
+    // itoa(GetLightStatusC(103, 1, LEFT_X, UP_Y), a, 10);
+    // PutAsc(LEFT_X + 15, UP_Y, a, WHITE, 2, 2);
+    // itoa(GetLightStatusC(213, 1, LEFT_X, UP_Y), a, 10);
+    // PutAsc(LEFT_X + 28, UP_Y, a, WHITE, 2, 2);
+    // NormalControl(2);
     precurrent = road;
     for (current = precurrent->next; current != NULL; current = precurrent->next)
     {
         CarSingle(car, current, precurrent, turn);
         precurrent = precurrent->next;
     }
-    NormalControl(2);
     precurrent = turn;
     for (current = precurrent->next; current != NULL; current = precurrent->next)
     {
-        TurnCar(car, current, precurrent);
+        TurnCar(car, turn, current, precurrent);
         precurrent = precurrent->next;
     }
     if (RandInt(0, 10000) > CarNum)
@@ -307,31 +321,31 @@ void SolveConflict(CAR *p)
 }
 
 /**********************************************
- * 函数名：int JudgeCross(CAR *p)
+ * 函数名：int JudgeToCross(CAR *p)
  * 参数：               当前车指针
  * 返回值：判断在进入路口范围内，0为不在路口
 ***********************************************/
-int JudgeCross(CAR *p)
+int JudgeToCross(CAR *p, int range)
 {
-    if ((p->x >= LEFT_X && p->x <= LEFT_X + 50 && p->y >= UP_Y + 40 && p->y <= UP_Y + 70) ||
-        (p->x >= LEFT_X - 50 && p->x <= LEFT_X && p->y >= UP_Y - 70 && p->y <= UP_Y - 40) ||
-        (p->x >= LEFT_X - 70 && p->x <= LEFT_X - 40 && p->y >= UP_Y && p->y <= UP_Y + 50) ||
-        (p->x >= LEFT_X + 40 && p->x <= LEFT_X + 70 && p->y >= UP_Y - 50 && p->y <= UP_Y))
+    if ((p->x >= LEFT_X && p->x <= LEFT_X + 50 && p->y >= UP_Y + 40 && p->y <= UP_Y + 50 + range) ||
+        (p->x >= LEFT_X - 50 && p->x <= LEFT_X && p->y >= UP_Y - 50 - range && p->y <= UP_Y - 40) ||
+        (p->x >= LEFT_X - 50 - range && p->x <= LEFT_X - 40 && p->y >= UP_Y && p->y <= UP_Y + 50) ||
+        (p->x >= LEFT_X + 40 && p->x <= LEFT_X + 50 + range && p->y >= UP_Y - 50 && p->y <= UP_Y))
         return 1;
-    else if ((p->x >= LEFT_X && p->x <= LEFT_X + 50 && p->y >= DOWN_Y + 40 && p->y <= DOWN_Y + 70) ||
-             (p->x >= LEFT_X - 50 && p->x <= LEFT_X && p->y >= DOWN_Y - 70 && p->y <= DOWN_Y - 40) ||
-             (p->x >= LEFT_X - 70 && p->x <= LEFT_X - 40 && p->y >= DOWN_Y && p->y <= DOWN_Y + 50) ||
-             (p->x >= LEFT_X + 40 && p->x <= LEFT_X + 70 && p->y >= DOWN_Y - 50 && p->y <= DOWN_Y))
+    else if ((p->x >= LEFT_X && p->x <= LEFT_X + 50 && p->y >= DOWN_Y + 40 && p->y <= DOWN_Y + 50 + range) ||
+             (p->x >= LEFT_X - 50 && p->x <= LEFT_X && p->y >= DOWN_Y - 50 - range && p->y <= DOWN_Y - 40) ||
+             (p->x >= LEFT_X - 50 - range && p->x <= LEFT_X - 40 && p->y >= DOWN_Y && p->y <= DOWN_Y + 50) ||
+             (p->x >= LEFT_X + 40 && p->x <= LEFT_X + 50 + range && p->y >= DOWN_Y - 50 && p->y <= DOWN_Y))
         return 2;
-    else if ((p->x >= RIGHT_X && p->x <= RIGHT_X + 50 && p->y >= DOWN_Y + 40 && p->y <= DOWN_Y + 70) ||
-             (p->x >= RIGHT_X - 50 && p->x <= RIGHT_X && p->y >= DOWN_Y - 70 && p->y <= DOWN_Y - 40) ||
-             (p->x >= RIGHT_X - 70 && p->x <= RIGHT_X - 40 && p->y >= DOWN_Y && p->y <= DOWN_Y + 50) ||
-             (p->x >= RIGHT_X + 40 && p->x <= RIGHT_X + 70 && p->y >= DOWN_Y - 50 && p->y <= DOWN_Y))
+    else if ((p->x >= RIGHT_X && p->x <= RIGHT_X + 50 && p->y >= DOWN_Y + 40 && p->y <= DOWN_Y + 50 + range) ||
+             (p->x >= RIGHT_X - 50 && p->x <= RIGHT_X && p->y >= DOWN_Y - 50 - range && p->y <= DOWN_Y - 40) ||
+             (p->x >= RIGHT_X - 50 - range && p->x <= RIGHT_X - 40 && p->y >= DOWN_Y && p->y <= DOWN_Y + 50) ||
+             (p->x >= RIGHT_X + 40 && p->x <= RIGHT_X + 50 + range && p->y >= DOWN_Y - 50 && p->y <= DOWN_Y))
         return 3;
-    else if ((p->x >= RIGHT_X && p->x <= RIGHT_X + 50 && p->y >= UP_Y + 40 && p->y <= UP_Y + 70) ||
-             (p->x >= RIGHT_X - 50 && p->x <= RIGHT_X && p->y >= UP_Y - 70 && p->y <= UP_Y - 40) ||
-             (p->x >= RIGHT_X - 70 && p->x <= RIGHT_X - 40 && p->y >= UP_Y && p->y <= UP_Y + 50) ||
-             (p->x >= RIGHT_X + 40 && p->x <= RIGHT_X + 70 && p->y >= UP_Y - 50 && p->y <= UP_Y))
+    else if ((p->x >= RIGHT_X && p->x <= RIGHT_X + 50 && p->y >= UP_Y + 40 && p->y <= UP_Y + 50 + range) ||
+             (p->x >= RIGHT_X - 50 && p->x <= RIGHT_X && p->y >= UP_Y - 50 - range && p->y <= UP_Y - 40) ||
+             (p->x >= RIGHT_X - 50 - range && p->x <= RIGHT_X - 40 && p->y >= UP_Y && p->y <= UP_Y + 50) ||
+             (p->x >= RIGHT_X + 40 && p->x <= RIGHT_X + 50 + range && p->y >= UP_Y - 50 && p->y <= UP_Y))
         return 4;
     else
         return 0;
@@ -346,8 +360,8 @@ int JudgeCross(CAR *p)
 void CarSingle(CAR *car, CAR *p, CAR *prep, CAR *turn)
 {
     char a[5];
-    int place = JudgeCross(p);
-    if (p->x < 0 || p->x > 1023 || p->y < 0 || p->y > 767)
+    int place = JudgeToCross(p, 20);
+    if (p->x < 0 || p->x > 1023 || p->y < 44 || p->y > 767)
     {
         prep->next = p->next;
         free(p);
@@ -365,15 +379,19 @@ void CarSingle(CAR *car, CAR *p, CAR *prep, CAR *turn)
         }
         else //需要变道行驶，为前方转弯做准备
         {
-            if (!TransPreScan(car, p))
+            switch (TransPreScan(car, p))
             {
+            case 0:
                 PutAsc(p->x + 150, p->y, "tran", WHITE, 2, 2);
                 TransformLane(p);
-            }
-            else
+                break;
+            case 1:
                 p->alarm = 1;
-            // PreScan(car, p);
-            SolveAlarm(p);
+                SolveAlarm(p);
+                break;
+            case 2:
+                p->speed = 0;
+            }
             MoveCar(p);
         }
         break;
@@ -386,7 +404,7 @@ void CarSingle(CAR *car, CAR *p, CAR *prep, CAR *turn)
             // PreScan(turn, p);
             // p->speed = p->speed / 4;//进入路口减速慢行
             // SolveAlarm(p);
-            MoveCar(p);
+            MoveCarLite(p);
             prep->next = p->next; //将车移入路口链表
             p->next = turn->next;
             turn->next = p;
@@ -403,7 +421,7 @@ void CarSingle(CAR *car, CAR *p, CAR *prep, CAR *turn)
             // PreScan(turn, p);
             // p->speed = p->speed / 4;//进入路口减速慢行
             // SolveAlarm(p);
-            MoveCar(p);
+            MoveCarLite(p);
             prep->next = p->next; //将车移入路口链表
             p->next = turn->next;
             turn->next = p;
@@ -421,7 +439,7 @@ void CarSingle(CAR *car, CAR *p, CAR *prep, CAR *turn)
     // setcolor(BLACK);
     // bar(300, 400, 400, 450);
     // PutAsc(300, 400, a, RED, 2, 2);
-    // itoa(p->turn[JudgeCross(p) - 1], a, 10);
+    // itoa(p->turn[JudgeToCross(p) - 1], a, 10);
     // PutAsc(300, 430, a, RED, 2, 2);
     // itoa(GetLightStatusC(p->justment, p->turn[place - 1], (p->x < 500) ? 250 : 750, (p->y < 400) ? 270 : 570), a, 10);
     // PutAsc(330, 430, a, RED, 2, 2);
@@ -438,17 +456,55 @@ int GetLightStatusC(int just, int turn, int x, int y)
     int flag;
     switch (turn)
     {
-    case 1: //直行
-        if (just / 100 == 1)
-            flag = getpixel(x - 58, y - 38); //水平方向
-        else
-            flag = getpixel(x + 38, y - 58); //竖直方向
+    case 1:
+        //直行
+        if (just / 100 == 1) //水平方向
+        {
+            if (just % 10 < 3)
+            {
+                flag = getpixel(x - 58, y - 38);
+            }
+            else
+            {
+                flag = getpixel(x + 58, y + 38);
+            }
+        }
+        else //竖直方向
+        {
+            if (just % 10 < 3)
+            {
+                flag = getpixel(x - 38, y + 58);
+            }
+            else
+            {
+                flag = getpixel(x + 38, y - 58);
+            }
+        }
         return (flag == GREEN);
-    case 2: //左转
-        if (just / 100 == 1)
-            flag = getpixel(x - 58, y - 12); //水平方向车左转
-        else
-            flag = getpixel(x - 12, y + 58); //竖直方向左转
+    case 2:
+        //左转
+        if (just / 100 == 1) //水平方向车左转
+        {
+            if (just % 10 < 3)
+            {
+                flag = getpixel(x - 58, y - 12);
+            }
+            else
+            {
+                flag = getpixel(x + 58, y + 12);
+            }
+        }
+        else //竖直方向左转
+        {
+            if (just % 10 < 3)
+            {
+                flag = getpixel(x - 12, y + 58);
+            }
+            else
+            {
+                flag = getpixel(x + 12, y - 58);
+            }
+        }
         return (flag == GREEN);
     case 3: //右转 //右转一直绿灯
         return 1;
@@ -468,16 +524,30 @@ int GetLightStatusT(int just, int turn, int x, int y)
     int flag;
     switch (turn)
     {
-    case 1: //直行
-        flag = getpixel(x - 58, y - 38);
-        return (flag == GREEN);
-    case 2: //左转
-        if (just / 100 == 1)
-            flag = getpixel(x - 58, y - 12); //竖直方向左转
+    case 1:
+        //直行
+        if (just % 10 < 3)
+        {
+            flag = getpixel(x - 58, y - 38);
+        }
         else
-            flag = getpixel(x + 24, y - 58); //水平方向车左转
+        {
+            flag = getpixel(x + 58, y + 38);
+        }
         return (flag == GREEN);
-    case 3: //右转 //右转一直绿灯
+    case 2:
+        //左转
+        if (just % 10 < 3) //竖直方向左转
+        {
+            flag = getpixel(x - 58, y - 12);
+        }
+        else //水平方向左转
+        {
+            flag = getpixel(x + 24, y - 58);
+        }
+        return (flag == GREEN);
+    case 3:
+        //右转 //右转一直绿灯
         return 1;
     default: //错误处理
         PutAsc(x, y, "LightErrorT", RED, 1, 1);
@@ -507,15 +577,19 @@ int JudgeInCross(CAR *p, int range)
 }
 
 //控制路口内车辆
-void TurnCar(CAR *car, CAR *p, CAR *prep)
+void TurnCar(CAR *car, CAR *turn, CAR *p, CAR *prep)
 {
-    char a[5]; //调bug专用
+    // char a[5]; //调bug专用
+    if (p->y < 35)
+    {
+        prep->next = p->next;
+        free(p);
+        return;
+    }
     switch (p->turn[JudgeInCross(p, 20) - 1])
     {
     case 1: //直行
-        PreScan(car, p);
-        SolveAlarm(p);
-        TurnStrightCar(p);
+        TurnStrightCar(p, turn);
         break;
     case 2: //左转
         TurnLeftCar(p);
@@ -542,6 +616,7 @@ void TurnCar(CAR *car, CAR *p, CAR *prep)
         prep->next = p->next;
         p->next = car->next;
         car->next = p;
+        CorrectCoordinate(p);
         PutAsc(p->x + 50, p->y, "OUT", WHITE, 2, 2);
         // itoa(p->flag, a, 10); //调试bug要用
         // PutAsc(p->x + 150, p->y, a, WHITE, 2, 2);
@@ -549,10 +624,11 @@ void TurnCar(CAR *car, CAR *p, CAR *prep)
 }
 
 //控制车辆直行
-void TurnStrightCar(CAR *p)
+void TurnStrightCar(CAR *p, CAR *turn)
 {
     //路口减速慢行
-    p->speed = 2;
+    PreScan(turn, p);
+    SolveAlarm(p);
     MoveCar(p);
     p->count++;
     if (!JudgeInCross(p, 20))
@@ -600,7 +676,11 @@ void TurnRightCar(CAR *car)
         car->count += 10;
     }
     else
+    {
+        //直行角度矫正
+        car->angle = (int)(car->angle / 90 + 0.5) * 90;
         MoveCar(car);
+    }
     car->count++;
     if (car->angle >= 360)
         car->angle -= 360;
@@ -619,12 +699,12 @@ void TurnRightCar(CAR *car)
 int TurnPreScan(CAR *car, CAR *p) //转弯前直道预扫描函数（共用）
 {
     CAR *current;
-    int pre = ChangeJustment(p), position = JudgeCross(p);
+    int pre = ChangeJustment(p), position = JudgeToCross(p, 20);
     char a[5]; //调bug专用
     itoa(p->justment, a, 10);
     PutAsc(p->x + 300, p->y, a, WHITE, 2, 2);
     for (current = car->next; current != NULL; current = current->next)
-        if ((current->justment == pre) && (JudgeInCross(current, 30) == position))
+        if ((current->justment == pre) && (JudgeInCross(current, 40) == position))
             return 1;
     return 0;
 }
@@ -705,6 +785,7 @@ void TransformConfirm(CAR *tar)
 ******************************************/
 void PreScan(CAR *car, CAR *tar)
 {
+    char a[4];
     CAR *current;
     tar->alarm = 0;
     for (current = car->next; current != NULL; current = current->next)
@@ -727,9 +808,9 @@ void PreScan(CAR *car, CAR *tar)
                 if ((current->x < tar->x) && ((current->x + DIS) > tar->x))
                     tar->alarm = 2;
                 else if (((current->x + DIS) <= tar->x) && ((current->x + DIL) > tar->x) && (tar->alarm != 2))
-                    tar->alarm = 1;
-                else if (((current->x + DIL) <= tar->x) && (tar->alarm != 0))
-                    tar->alarm = 0; //将距离梯度化，在最短距离内停车，中距内慢速行驶，长距内以初始化速度行驶
+                    tar->alarm = 1; //将距离梯度化，在最短距离内停车，中距内慢速行驶，长距内以初始化速度行驶
+                // else if (((current->x + DIL) <= tar->x) && (tar->alarm != 0))
+                //     tar->alarm = 0;
                 break;
             case 103:
             case 104:
@@ -746,9 +827,9 @@ void PreScan(CAR *car, CAR *tar)
                 if ((current->x > tar->x) && ((current->x - DIS) < tar->x))
                     tar->alarm = 2;
                 else if (((current->x - DIS) >= tar->x) && ((current->x - DIL) < tar->x) && (tar->alarm != 2))
-                    tar->alarm = 1;
-                else if (((current->x - DIL) >= tar->x) && (tar->alarm != 0))
-                    tar->alarm = 0; //将距离梯度化，在最短距离内停车，中距内慢速行驶，长距内以初始化速度行驶
+                    tar->alarm = 1; //将距离梯度化，在最短距离内停车，中距内慢速行驶，长距内以初始化速度行驶
+                // else if (((current->x - DIL) >= tar->x) && (tar->alarm != 0))
+                //     tar->alarm = 0;
                 break;
             case 201:
             case 202:
@@ -760,12 +841,12 @@ void PreScan(CAR *car, CAR *tar)
             case 232:
             case 241:
             case 242:
-                if ((current->y > tar->y) && ((current->y + DIS) < tar->y))
+                if ((current->y > tar->y) && ((current->y - DIS) < tar->y))
                     tar->alarm = 2;
-                else if (((current->y + DIS) >= tar->y) && ((current->y + DIL) < tar->y && (tar->alarm != 2)))
-                    tar->alarm = 1;
-                else if (((current->y + DIL) >= tar->y) && (tar->alarm != 0))
-                    tar->alarm = 0; //将距离梯度化，在最短距离内停车，中距内慢速行驶，长距内以初始化速度行驶
+                else if (((current->y - DIS) >= tar->y) && ((current->y - DIL) < tar->y && (tar->alarm != 2)))
+                    tar->alarm = 1; //将距离梯度化，在最短距离内停车，中距内慢速行驶，长距内以初始化速度行驶
+                // else if (((current->y + DIL) >= tar->y) && (tar->alarm != 0))
+                //     tar->alarm = 0;
                 break;
             case 203:
             case 204:
@@ -777,28 +858,68 @@ void PreScan(CAR *car, CAR *tar)
             case 234:
             case 243:
             case 244:
-                if ((current->y < tar->y) && ((current->y - DIS) > tar->y))
+                if ((current->y < tar->y) && ((current->y + DIS) > tar->y))
                     tar->alarm = 2;
-                else if (((current->y - DIS) <= tar->y) && ((current->y + DIL) > tar->y))
-                    tar->alarm = 1;
-                else if (((current->y + DIL) <= tar->y) && (tar->alarm != 0))
-                    tar->alarm = 0; //将距离梯度化，在最短距离内停车，中距内慢速行驶，长距内以初始化速度行驶
+                else if (((current->y + DIS) <= tar->y) && ((current->y + DIL) > tar->y && (tar->alarm != 2)))
+                    tar->alarm = 1; //将距离梯度化，在最短距离内停车，中距内慢速行驶，长距内以初始化速度行驶
+                // else if (((current->y + DIL) >= tar->y) && (tar->alarm != 0))
+                //      tar->alarm = 0;
                 break;
             default:
                 PutAsc(tar->x, tar->y, "bad justment", RED, 2, 2);
-                CoractJustment(tar);
+                CorrectJustment(tar);
                 break;
             }
+    }
+    itoa(tar->alarm, a, 10);
+    PutAsc(tar->x + 20, tar->y, a, WHITE, 1, 1);
+}
+
+/********************************************
+ * ***函数名，void CorrectCoordinate(CAR *p)
+ * ***参数，要修正的车辆指针
+ * ***返回值，void
+ * ***函数功能，修正车辆出路口后的坐标错误
+***********************************************/
+void CorrectCoordinate(CAR *p)
+{
+    int road_x = (JudgeInCross(p, 40) > 2) ? RIGHT_X : LEFT_X, road_y = (JudgeInCross(p, 40) % 4 < 2) ? UP_Y : DOWN_Y;
+    switch ((int)(p->angle / 90))
+    {
+    case 0:
+        if (p->x < road_x + 25)
+            p->x = road_x + 13;
+        else
+            p->x = road_x + 38;
+        break;
+    case 2:
+        if (p->x < road_x - 25)
+            p->x = road_x - 38;
+        else
+            p->x = road_x - 13;
+        break;
+    case 1:
+        if (p->y < road_y - 25)
+            p->y = road_y - 38;
+        else
+            p->y = road_y - 13;
+        break;
+    case 3:
+        if (p->y < road_y + 25)
+            p->y = road_y + 13;
+        else
+            p->y = road_y + 38;
+        break;
     }
 }
 
 /********************************************
- * ***函数名，void CoractJustment(CAR *p)
+ * ***函数名，void CorrectJustment(CAR *p)
  * ***参数，要修正的车辆指针
  * ***返回值，void
  * ***函数功能，修正bad justment错误
 ***********************************************/
-void CoractJustment(CAR *p)
+void CorrectJustment(CAR *p)
 {
     switch ((int)(p->angle / 90))
     {
@@ -1068,6 +1189,30 @@ void MoveCar(CAR *p)
         break;
     }
 }
+/************************************************************
+ * ***函数名，void MoveCarLite(CAR *p)
+ * ***函数功能，进入或驶出路口时移动一小段距离，避免位置判断出错。
+ * ***输入参数：CAR*车辆指针
+ * ***返回值：空
+*************************************************************/
+void MoveCarLite(CAR *p)
+{
+    switch ((int)p->angle / 90)
+    {
+    case 0:
+        p->y -= 2;
+        break;
+    case 1:
+        p->x -= 2;
+        break;
+    case 2:
+        p->y += 2;
+        break;
+    case 3:
+        p->x += 2;
+        break;
+    }
+}
 
 //处理前方报警的函数(共用)
 void SolveAlarm(CAR *p)
@@ -1092,16 +1237,17 @@ void SolveAlarm(CAR *p)
     }
 }
 
-/***********************************
- *  变道扫描函数
+/****************************************************
+ *  变道扫描函数int TransPreScan(CAR *car, CAR *tar)
  *  输入值：含全部车的链表；当前车
  *  返回值：是否能变道：0 可变道
  *                    1 不可变
-***********************************/
+ *                    2 停车等待
+****************************************************/
 int TransPreScan(CAR *car, CAR *tar)
 {
     CAR *current;
-    int i;
+    int i, flag = 0;
     if (tar->justment % 2 == 0)
         i = tar->justment - 1;
     else
@@ -1117,39 +1263,46 @@ int TransPreScan(CAR *car, CAR *tar)
             case 141:
             case 142:
                 if ((current->x < tar->x) && ((current->x + DIS) > tar->x))
-                    return 0;
-                else
-                    return 1;
+                    flag = 1;
+                break;
             case 113:
             case 114:
             case 143:
             case 144:
                 if ((current->x > tar->x - DIL) && ((current->x) < tar->x))
-                    return 0;
-                else
-                    return 1;
+                    flag = 1;
+                break;
             case 211:
             case 212:
             case 231:
             case 232:
                 if ((current->y < tar->y + DIL) && ((current->y) > tar->y))
-                    return 0;
-                else
-                    return 1;
+                    flag = 1;
+                break;
             case 213:
             case 214:
             case 233:
             case 234:
                 if ((current->y > tar->y - DIL) && ((current->y) < tar->y))
-                    return 0;
-                else
-                    return 1;
+                    flag = 1;
+                break;
             default:
                 PutAsc(tar->x, tar->y, "tran scan error", RED, 2, 2);
             }
         }
     }
-    return 0;
+    if (flag == 1)
+    {
+        if (JudgeToCross(tar, 80))
+        {
+            return 2; //2为要停车等待
+        }
+        return 1; //减速代转
+    }
+    else
+    {
+        return 0; //可以转
+    }
 }
 
 void TransformLane(CAR *tar)
